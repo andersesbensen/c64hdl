@@ -290,9 +290,9 @@ sid sid_e (
     );
 
 `ifdef XILINX_SIMULATOR
-rom #("kernal.ram",13) kernal (
+rom #("kernal.mif",13) kernal (
 `else
-rom #("kernal_orig.ram",13) kernal (
+rom #("kernal_orig.mif",13) kernal (
 `endif
         .clk(dot_clk),
         .a(bus_address[12:0]),
@@ -301,14 +301,14 @@ rom #("kernal_orig.ram",13) kernal (
 
     );
 
-rom #("basic.ram",13) basic(
+rom #("basic.mif",13) basic(
         .clk(dot_clk),
         .a(bus_address[12:0]),
         .do(basic_do),
         .enable(basic_cs)
     );
 
-rom #("chargen.ram",12) chargen(
+rom #("chargen.mif",12) chargen(
         .clk(dot_clk),
         .a(bus_address[11:0]),
         .do(charrom_do),

@@ -7,7 +7,6 @@
 #Bank = 35, Pin name = IO_L12P_T1_MRCC_35,					Sch name = CLK100MHZ
 set_property PACKAGE_PIN E3 [get_ports clk_i]
 set_property IOSTANDARD LVCMOS33 [get_ports clk_i]
-create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports clk_i]
 
 ## Switches
 #Bank = 34, Pin name = IO_L21P_T3_DQS_34,					Sch name = SW0
@@ -723,50 +722,20 @@ set_property PULLUP true [get_ports ps2_data]
 
 
 
-create_generated_clock -name u_hex7segment/low_clk -source [get_pins clock_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0] -divide_by 8192 -add -master_clock clk_dot_clock_clk_wiz_0_0 [get_pins {u_hex7segment/div_reg[13]/Q}]
-create_generated_clock -name u_hex7segment/low_clk_1 -source [get_pins clock_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0] -divide_by 8192 -add -master_clock clk_dot_clock_clk_wiz_0_0_1 [get_pins {u_hex7segment/div_reg[13]/Q}]
-set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks clk_i] -group [get_clocks -include_generated_clocks sys_clk_pin]
+#create_generated_clock -name u_hex7segment/low_clk -source [get_pins clock_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0] -divide_by 8192 -add -master_clock clk_dot_clock_clk_wiz_0_0 [get_pins {u_hex7segment/div_reg[13]/Q}]
+#create_generated_clock -name u_hex7segment/low_clk_1 -source [get_pins clock_i/clk_wiz_0/inst/mmcm_adv_inst/CLKOUT0] -divide_by 8192 -add -master_clock clk_dot_clock_clk_wiz_0_0_1 [get_pins {u_hex7segment/div_reg[13]/Q}]
+#set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks clk_i] -group [get_clocks -include_generated_clocks sys_clk_pin]
+#create_generated_clock -name c64_e/vicii_e/phi0_reg_0 -source [get_pins c64_e/vicii_e/phi0_reg/C] -divide_by 1 -add -master_clock clk_dot_clock_clk_wiz_0_0 [get_pins c64_e/vicii_e/phi0_reg/Q]
+#create_generated_clock -name c64_e/vicii_e/phi0_reg_0_1 -source [get_pins c64_e/vicii_e/phi0_reg/C] -divide_by 1 -add -master_clock clk_dot_clock_clk_wiz_0_0_1 [get_pins c64_e/vicii_e/phi0_reg/Q]
+#create_clock -period 126.872 -name VIRTUAL_c64_e/vicii_e/phi0_reg_0 -waveform {0.000 63.436}
+#create_clock -period 7.048 -name VIRTUAL_clk_color_clock_clk_wiz_0_0 -waveform {0.000 3.524}
+#create_clock -period 1039337.500 -name VIRTUAL_u_hex7segment/low_clk -waveform {0.000 519668.750}
 
-create_generated_clock -name c64_e/vicii_e/phi0_reg_0 -source [get_pins c64_e/vicii_e/phi0_reg/C] -divide_by 1 -add -master_clock clk_dot_clock_clk_wiz_0_0 [get_pins c64_e/vicii_e/phi0_reg/Q]
-create_generated_clock -name c64_e/vicii_e/phi0_reg_0_1 -source [get_pins c64_e/vicii_e/phi0_reg/C] -divide_by 1 -add -master_clock clk_dot_clock_clk_wiz_0_0_1 [get_pins c64_e/vicii_e/phi0_reg/Q]
-create_clock -period 126.872 -name VIRTUAL_c64_e/vicii_e/phi0_reg_0 -waveform {0.000 63.436}
-create_clock -period 7.048 -name VIRTUAL_clk_color_clock_clk_wiz_0_0 -waveform {0.000 3.524}
-create_clock -period 1039337.500 -name VIRTUAL_u_hex7segment/low_clk -waveform {0.000 519668.750}
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -clock_fall -min -add_delay 200.000 [get_ports {sw_i[*]}]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -clock_fall -max -add_delay 2000.000 [get_ports {sw_i[*]}]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 200.000 [get_ports {sw_i[*]}]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 2000.000 [get_ports {sw_i[*]}]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 200.000 [get_ports RsRx]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 2000.000 [get_ports RsRx]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 200.000 [get_ports ps2_clk]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 2000.000 [get_ports ps2_clk]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 200.000 [get_ports ps2_data]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 2000.000 [get_ports ps2_data]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -clock_fall -min -add_delay 200.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -clock_fall -max -add_delay 2000.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 200.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 2000.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -min -add_delay 200.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -max -add_delay 2000.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -min -add_delay 200.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -max -add_delay 2000.000 [get_ports rstn_i]
-set_output_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -min -add_delay 90.000 [get_ports {disp_an_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -max -add_delay 110.000 [get_ports {disp_an_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -min -add_delay 90.000 [get_ports {disp_seg_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_u_hex7segment/low_clk] -max -add_delay 110.000 [get_ports {disp_seg_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 90.000 [get_ports {led_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 110.000 [get_ports {led_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -min -add_delay 90.000 [get_ports {vga_red_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -max -add_delay 110.000 [get_ports {vga_red_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 90.000 [get_ports {vga_red_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 110.000 [get_ports {vga_red_o[*]}]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -min -add_delay 90.000 [get_ports RsTx]
-set_output_delay -clock [get_clocks VIRTUAL_c64_e/vicii_e/phi0_reg_0] -max -add_delay 110.000 [get_ports RsTx]
-set_output_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -min -add_delay 90.000 [get_ports pwm_audio_o]
-set_output_delay -clock [get_clocks VIRTUAL_clk_color_clock_clk_wiz_0_0] -max -add_delay 110.000 [get_ports pwm_audio_o]
-create_clock -period 1.000 -name virtual_clock
-set_input_delay -clock [get_clocks virtual_clock] -min -add_delay 100.000 [get_ports rstn_i]
-set_input_delay -clock [get_clocks virtual_clock] -max -add_delay 150.000 [get_ports rstn_i]
-set_output_delay -clock [get_clocks virtual_clock] -min -add_delay 100.000 [get_ports pwm_sdaudio_o]
-set_output_delay -clock [get_clocks virtual_clock] -max -add_delay 150.000 [get_ports pwm_sdaudio_o]
-set_clock_groups -physically_exclusive -group [get_clocks -include_generated_clocks c64_e/vicii_e/phi0_reg_0] -group [get_clocks -include_generated_clocks c64_e/vicii_e/phi0_reg_0_1]
+
+# 100Mhz input clokc
+#// _clk_dot___7.88194______0.000______50.0______473.075____297.220
+#// clk_color__141.87500______0.000______50.0______268.465____297.220
+create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports clk_i]
+create_clock -period   7.048 [get_ports color_clock]
+create_clock -period 141.884 [get_ports dot_clock]
+

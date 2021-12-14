@@ -1,1 +1,1 @@
-files = [  "basic.ram","kernal_orig.ram","kernal.ram","chargen.ram", ]
+files = [  "basic.mif","kernal_orig.mif","kernal.mif","chargen.mif", ]
