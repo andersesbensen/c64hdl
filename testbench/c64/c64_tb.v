@@ -76,7 +76,10 @@ c64 c64_e(
         .GAME_n(1'b1),
         .EXTROM_n(1'b1),
         .serial_data_i(1'b0),
-        .serial_clock_i(1'b0)
+        .serial_clock_i(1'b0),
+
+        .joy1( 5'b11111),
+        .joy2( 5'b11111)
     );
 
 /*

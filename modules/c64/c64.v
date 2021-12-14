@@ -43,6 +43,10 @@ module c64(
            output serial_clock_o,
            output serial_atn,
 
+           //Joystick 
+           input[4:0] joy1,
+           input[4:0] joy2,
+
            //Expantion connector
            input INTRES,
            input NMI,
@@ -230,6 +234,10 @@ ram #(10,4) color_ram(
         .we(GR_W)
     );
 
+//Hook up joystick
+wire[7:0] cia1_pb =  keyboard_COL & {joy1[4:0],3'b111};
+wire[7:0] cia1_pa =  keyboard_ROW & {joy2[4:0],3'b111};
+
 mos6526 cia1 (
             .dot_clk(dot_clk),
             .clk(clk),
@@ -240,8 +248,8 @@ mos6526 cia1 (
             .db_in(bus_di),
             .db_out(cia1_do),
 
-            .pa_in(keyboard_ROW),
-            .pb_in(keyboard_COL),
+            .pa_in(cia1_pa),
+            .pb_in(cia1_pb),
             .pa_out(keyboard_ROW),
             .pb_out(),
 

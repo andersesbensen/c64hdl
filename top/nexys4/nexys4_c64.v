@@ -267,6 +267,10 @@ c64 c64_e(
         .serial_data_o(serial_data_o),
         .serial_clock_o(serial_clock_o),
         .serial_atn(serial_atn),
+      
+        //Joystick
+        .joy1( {btnl_i, btnr_i,btnu_i,btnd_i, btnc_i} ),
+        .joy2(  5'b11111),
         .BA(BA),
         .Do(Do),
         .IO1(),

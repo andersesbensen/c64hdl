@@ -493,6 +493,8 @@ wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
 wire[3:0] pixel_and_border = (BKDE & VSW & BLNK) ? final_pixel : EC;
 
 
+
+
 reg[31:0] color_carrier;
 always @(posedge color_clock) begin
     if(reset)
