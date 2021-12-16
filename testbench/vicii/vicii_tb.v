@@ -1,15 +1,8 @@
-`define XILINX_SIMULATOR
-
-`include "../vicii2.v"
-`include "../ram.v"
-`include "../rom.v"
-`include "../vicii_palette.v"
-`include "../vicii_sprite.v"
 
 //`timescale 1ns/1ps
 `default_nettype none
 
-module tb_vicii2();
+module vicii_tb();
 reg clk;
 reg rst_n;
 wire phi0;
@@ -46,7 +39,7 @@ ram #(.ADDR_WIDTH(12),.DATA_WIDTH(12)) my_ram1
         .do( data_ram )
     );
 
-rom #("chargen.hex",12) chargen(
+rom #("../../assets/chargen.mif",12) chargen(
         .clk(clk),
         .a( bus_addr[11:0]),
         .do( data_rom[7:0] ),
@@ -54,7 +47,7 @@ rom #("chargen.hex",12) chargen(
     );
 
 
-vicii2 my_vic
+vicii my_vic
        (
            .aec( aec ),
            .reset ( !rst_n ),
@@ -74,9 +67,9 @@ localparam CLK_PERIOD = 10;
 always #(CLK_PERIOD/2) clk=~clk;
 
 initial begin
-    $dumpfile("tb_vicii2.vcd");
-    $dumpvars(0, tb_vicii2);
-    $readmemh("start_screen.hex",test_rom);
+    $dumpfile("vicii_tb.vcd");
+    $dumpvars(0, vicii_tb);
+    $readmemh("start_screen.mif",test_rom);
 end
 
 initial begin

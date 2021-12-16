@@ -117,7 +117,7 @@ wire chroma_en;   // color phase enable
 reg[8:0] RASTER_WATCH;
 reg g_access;
 reg g_access_enable;
-
+reg vic_enable;
 reg even;
 
 localparam C_ADDR_PASE = 0;
@@ -146,8 +146,7 @@ wire VSW  = (RSEL ? VSW25 : VSW24);
 assign ao = vic_ao | 
             sp_ao[0]| sp_ao[1]| sp_ao[2]| sp_ao[3]| 
             sp_ao[4]| sp_ao[5]| sp_ao[6]| sp_ao[7];
-
-wire vic_ba = ((RC[2:0] == Y[2:0]) & EEVMF & VMBA);
+wire vic_ba = ((RC[2:0] == (Y[2:0])) & vic_enable &  EEVMF & VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
 wire d_access = (vic_ba);
@@ -323,13 +322,15 @@ begin
                 RCs <= RCs + 1;
             end
             //if(RC == 261) RC  <=0;// Resets vertical count to zero
-            if(RC == 17) VSYNC <= 1; if(RC == 20) VSYNC <= 0;
-            if(RC == 14) VEQ <=1;    if(RC==23) VEQ <=0;
-            if(RC == 13) VBLANK <= 1;if(RC == 24) VBLANK <= 0;
+            if(RC == (17+312-32)) VSYNC  <= 1; if(RC == (20+312-32)) VSYNC  <= 0;
+            if(RC == (14+312-32)) VEQ    <= 1; if(RC == (23+312-32)) VEQ    <= 0;
+            if(RC == (13+312-32)) VBLANK <= 1; if(RC == (24+312-32)) VBLANK <= 0;
+            
             if(RC == 55) VSW24 <= 1; if(RC == 247) VSW24 <= 0;
             if(RC == 51) VSW25 <= 1; if(RC == 251) VSW25 <= 0;
             if(RC == 48) EEVMF <= 1; if(RC == 248) EEVMF <= 0;
             //if(RC == 51) EEVMF <= 1; if(RC == 251) EEVMF <= 0;
+            if(RC == 1) vic_enable <= BLNK;
         end
     end
 
@@ -389,11 +390,12 @@ begin
     if(Xc == 335) vic_ao <=0;
 
     // Horizontal decodes
-    if(Xc == 416) HSYNC <= 1; if(Xc == 452) HSYNC <= 0;
-    if(Xc == 178) HEQ1 <= 1;  if(Xc == 196) HEQ1 <= 0;
-    if(Xc == 434) HEQ2 <= 1;  if(Xc == 452) HEQ2 <= 0;
-    if(Xc == 396) HBLANK <= 1;if(Xc == 496) HBLANK <= 0;
-    if(Xc == 456) BURST <= 1; if(Xc == 492) BURST <= 0;
+    if(Xc == (416-16)) HSYNC <= 1; if(Xc == (452-16)) HSYNC <= 0;
+    if(Xc == (396-16)) HBLANK <= 1;if(Xc == (496-16)) HBLANK <= 0;
+    if(Xc == (456-16)) BURST <= 1; if(Xc == (492-16)) BURST <= 0;
+    if(Xc == 178-16) HEQ1 <= 1;  if(Xc == 196-16) HEQ1 <= 0;
+    if(Xc == 434-16) HEQ2 <= 1;  if(Xc == 452-16) HEQ2 <= 0;
+    
     //if(Xc == 35) BKDE38 <= 1; if(Xc == 339) BKDE38 <= 0;
     //if(Xc == 28) BKDE40 <= 1; if(Xc == 348) BKDE40 <= 0;
     if(Xc == 26) BKDE38 <= 1; if(Xc == 330) BKDE38 <= 0;
@@ -490,7 +492,7 @@ wire[3:0] final_pixel =
 wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
 
 //Are we in the screen area
-wire[3:0] pixel_and_border = (BKDE & VSW & BLNK) ? final_pixel : EC;
+wire[3:0] pixel_and_border = (BKDE & VSW & vic_enable) ? final_pixel : EC;
 
 
 
@@ -507,7 +509,6 @@ assign color_out =
        (!VBLANK & BURST) ? (even ? color_carrier[11] : color_carrier[31-11]) :
        (!(HBLANK | VBLANK) & chroma_en ) ? (even ? color_carrier[chroma] : color_carrier[31-chroma]):
        0;
-
 
 
 assign sync_lumen = sync ? 0 :
@@ -558,10 +559,21 @@ always @(posedge pixel_clock ) begin
         frame = frame +1;
     end
 
-    $fwrite(f,"%0d %0d %0d\n",
-            color_table[pixel_and_border][23:16],
-            color_table[pixel_and_border][15:8],
-            color_table[pixel_and_border][7:0]);
+    if (sp_ba>0) 
+        $fwrite(f,"0 255 0\n");
+    else if( HSYNC | VSYNC) 
+        $fwrite(f,"255 255 255\n");
+    else if (BURST) 
+        $fwrite(f,"100 0 0\n");
+    else if (VBLANK | HBLANK) 
+        $fwrite(f,"10 10 10\n");
+    else begin
+        $fwrite(f,"%0d %0d %0d\n",
+                color_table[pixel_and_border][23:16],
+                color_table[pixel_and_border][15:8],
+                color_table[pixel_and_border][7:0]);
+
+    end
 end
 `endif 
 

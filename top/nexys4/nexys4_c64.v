@@ -99,7 +99,7 @@ wire[7:0] kk_r;
 wire lock;
 wire reset;
 wire phi2;
-wire[7:0] composite;
+wire[5:0] composite;
 wire[11:0] audio;
 wire[7:0] rom_data;
 
@@ -123,7 +123,7 @@ wire serial_data_i;
 assign serial_clock_i = 1'b1;
 assign serial_data_i = 1'b1;
 
-assign vga_red_o = composite[7:4];
+assign vga_red_o = composite[5:2];
 assign reset = ~rstn_i;
 
 reg debug_ack;
@@ -235,7 +235,7 @@ end
 
 c64 c64_e(
         .color_carrier(color_clock),
-        .dot_clk(dot_clk & !sw_i[15]),
+        .dot_clk(dot_clk ),
         .reset(reset | ~lock),
         .composite(composite),
         .audio(audio),
@@ -269,7 +269,8 @@ c64 c64_e(
         .serial_atn(serial_atn),
       
         //Joystick
-        .joy1( {btnl_i, btnr_i,btnu_i,btnd_i, btnc_i} ),
+        //         f         r     l        d        u
+        .joy1( { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i } ),
         .joy2(  5'b11111),
         .BA(BA),
         .Do(Do),

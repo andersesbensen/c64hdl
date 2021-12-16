@@ -23,7 +23,7 @@ module c64(
            input color_carrier,
            input dot_clk,
            input reset,
-           output[7:0] composite,
+           output[5:0] composite,
            output[11:0] audio,
 
            //Keyboard connector
@@ -145,7 +145,7 @@ wire GR_W;
 
 assign cass_motor = cpu_p[5];
 assign cass_wrt = cpu_p[3];
-assign composite = (luma << 2) + (color <<6);
+assign composite = color ? luma + 16 : luma;
 
 vicii vicii_e (
            .do(vic_do),
@@ -235,8 +235,8 @@ ram #(10,4) color_ram(
     );
 
 //Hook up joystick
-wire[7:0] cia1_pb =  keyboard_COL & {joy1[4:0],3'b111};
-wire[7:0] cia1_pa =  keyboard_ROW & {joy2[4:0],3'b111};
+wire[7:0] cia1_pb =  keyboard_COL & {3'b111,joy1[4:0]};
+wire[7:0] cia1_pa =  keyboard_ROW & {3'b111,joy2[4:0]};
 
 mos6526 cia1 (
             .dot_clk(dot_clk),
