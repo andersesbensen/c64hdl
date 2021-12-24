@@ -19,14 +19,14 @@ wire A13 = A[13];
 wire A14 = A[14];
 wire A15 = A[15];
 
-assign VIC = I_O & !A11 & !A10;
-assign SID = I_O & !A11 &  A10;
-assign COLOR_RAM = I_O &  A11 &  !A10;
+assign VIC = I_O && !A11 && !A10;
+assign SID = I_O && !A11 &&  A10;
+assign COLOR_RAM = I_O &&  A11 &&  !A10;
 
-assign CIA1 = I_O & A11 & A10 & !A9 & !A8;
-assign CIA2 = I_O & A11 & A10 & !A9 &  A8;
-assign IO1  = I_O & A11 & A10 &  A9 & !A8;
-assign IO2  = I_O & A11 & A10 &  A9 &  A8;
+assign CIA1 = I_O && A11 && A10 && !A9 && !A8;
+assign CIA2 = I_O && A11 && A10 && !A9 &&  A8;
+assign IO1  = I_O && A11 && A10 &&  A9 && !A8;
+assign IO2  = I_O && A11 && A10 &&  A9 &&  A8;
 
 // "Created by JED2AHDL ABEL 4.10 on Wed Jul 19 15:37:23 1995
 //
@@ -53,37 +53,37 @@ assign IO2  = I_O & A11 & A10 &  A9 &  A8;
 //        X,K,Z,C,P,U,D = .X.,.K.,.Z.,.C.,.P.,.U.,.D.;
 //EQUATIONS
 
-wire Q7 = (_HIRAM & A15 & !A14 & A13 & !_AEC & R__W & !_EXROM & !_GAME
-           | A15 & A14 & A13 & !_AEC & _EXROM & !_GAME
-           | _AEC & _EXROM & !_GAME & VA13 & VA12 );
+wire Q7 = (_HIRAM && A15 && !A14 && A13 && !_AEC && R__W && !_EXROM && !_GAME
+           || A15 && A14 && A13 && !_AEC && _EXROM && !_GAME
+           || _AEC && _EXROM && !_GAME && VA13 && VA12 );
 
-wire Q6 = (_LORAM & _HIRAM & A15 & !A14 & !A13 & !_AEC & R__W & !_EXROM
-           | A15 & !A14 & !A13 & !_AEC & _EXROM & !_GAME );
+wire Q6 = (_LORAM && _HIRAM && A15 && !A14 && !A13 && !_AEC && R__W && !_EXROM
+           || A15 && !A14 && !A13 && !_AEC && _EXROM && !_GAME );
 
-wire Q5 = (_HIRAM & _CHAREN & A15 & A14 & !A13 & A12 & !_AEC & (BA | !R__W) & (!_EXROM | _GAME )
-           | _LORAM & _CHAREN & A15 & A14 & !A13 & A12 & !_AEC & (BA | !R__W) & (!_EXROM | _GAME )
-           | A15 & A14 & !A13 & A12 & !_AEC & (BA | !R__W ) & _EXROM & !_GAME );
+wire Q5 = (_HIRAM && _CHAREN && A15 && A14 && !A13 && A12 && !_AEC && (BA || !R__W) && (!_EXROM || _GAME )
+           || _LORAM && _CHAREN && A15 && A14 && !A13 && A12 && !_AEC && (BA || !R__W) && (!_EXROM || _GAME )
+           || A15 && A14 && !A13 && A12 && !_AEC && (BA || !R__W ) && _EXROM && !_GAME );
 
-wire Q3 = (_LORAM & !_CHAREN & A15 & A14 & !A13 & A12 & !_AEC & R__W & _GAME
-           | _HIRAM & !_CHAREN & A15 & A14 & !A13 & A12 & !_AEC & R__W & (!_EXROM | _GAME )
-           | _VA14 & _AEC & _GAME & !VA13 & VA12
-           | _VA14 & _AEC & !_EXROM & !_GAME & !VA13 & VA12 );
+wire Q3 = (_LORAM && !_CHAREN && A15 && A14 && !A13 && A12 && !_AEC && R__W && _GAME
+           || _HIRAM && !_CHAREN && A15 && A14 && !A13 && A12 && !_AEC && R__W && (!_EXROM || _GAME )
+           || _VA14 && _AEC && _GAME && !VA13 && VA12
+           || _VA14 && _AEC && !_EXROM && !_GAME && !VA13 && VA12 );
 
-wire Q2 = (_HIRAM & A15 & A14 & A13 & !_AEC & R__W & (!_EXROM | _GAME ) );
+wire Q2 = (_HIRAM && A15 && A14 && A13 && !_AEC && R__W && (!_EXROM || _GAME ) );
 
-wire Q1 = (_LORAM & _HIRAM & A15 & !A14 & A13 & !_AEC & R__W & _GAME );
+wire Q1 = (_LORAM && _HIRAM && A15 && !A14 && A13 && !_AEC && R__W && _GAME );
 
 assign ROMH = Q7;
 assign ROML = Q6;
 assign I_O = Q5;
-assign GR_W = (!_CAS & A15 & A14 & !A13 & A12 & !_AEC & !R__W );
+assign GR_W = (!_CAS && A15 && A14 && !A13 && A12 && !_AEC && !R__W );
 assign CHAROM = Q3;
 assign KERNAL = Q2;
 assign BASIC = Q1;
-assign CASRAM = !(_CAS | Q1 | Q2 | Q3 | Q5 | Q6 | Q7
-                  | _EXROM & !_GAME & !A15 &  A14
-                  | _EXROM & !_GAME & !A15 & !A14 &  A12
-                  | _EXROM & !_GAME & !A15 & !A14 &  A13
-                  | _EXROM & !_GAME &  A15 & !A14 &  A13
-                  | _EXROM & !_GAME &  A15 &  A14 & !A13 & !A12 );
+assign CASRAM = !(_CAS || Q1 || Q2 || Q3 || Q5 || Q6 || Q7
+                  || _EXROM && !_GAME && !A15 &&  A14
+                  || _EXROM && !_GAME && !A15 && !A14 &&  A12
+                  || _EXROM && !_GAME && !A15 && !A14 &&  A13
+                  || _EXROM && !_GAME &&  A15 && !A14 &&  A13
+                  || _EXROM && !_GAME &&  A15 &&  A14 && !A13 && !A12 );
 endmodule
