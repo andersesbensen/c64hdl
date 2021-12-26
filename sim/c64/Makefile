@@ -5,7 +5,7 @@
 
 TOP_MODULE := c64_tb
 
-IVERILOG_OPT := 
+IVERILOG_OPT := -D XILINX_SIMULATOR
 
 #target for performing local simulation
 local: sim_pre_cmd simulation sim_post_cmd

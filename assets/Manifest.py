@@ -1,1 +1,1 @@
-files = [  "basic.mif","kernal_orig.mif","kernal.mif","chargen.mif", ]
+files = [  "basic.mif","kernal_orig.mif","kernal.mif","chargen.mif", "diag.mif"]

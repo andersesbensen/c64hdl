@@ -91,8 +91,6 @@ wire      uart_rx_byte_valid;
 wire[7:0] uart_tx_byte;
 wire      uart_tx_byte_valid;
 
-wire color_clock;
-wire dot_clk;
 wire[7:0] kk_c;
 wire[7:0] kk_r;
 
@@ -101,7 +99,7 @@ wire reset;
 wire phi2;
 wire[5:0] composite;
 wire[11:0] audio;
-wire[7:0] rom_data;
+wire[7:0] cart_data;
 
 /*CPU Bus signals*/
 wire ROMH;
@@ -129,7 +127,11 @@ assign reset = ~rstn_i;
 reg debug_ack;
 reg debug_dma;
 reg[7:0] DoL; //Latch Do when changing clock domain
-reg[7:0] DiL; //Latch Do when changing clock domain
+
+wire[7:0] debug_do;  
+reg[7:0] debug_do_l; //Latch Do when changing clock domain
+
+wire[7:0] cart_do;  
 
 wire debug_request;
 assign DMA = debug_dma;
@@ -140,7 +142,8 @@ assign led_o[4] = (reset | ~lock);
 assign led_o[5] = ps2byte_ready;
 assign led_o[6] = !ps2_clk;
 assign led_o[7] = !ps2_data;
-assign led_o[13:8] = 12'h0;
+assign led_o[8] = BA;
+assign led_o[13:9] = 12'h0;
 assign led_o[14] = debug_request;
 assign led_o[15] = DMA;
 
@@ -149,6 +152,33 @@ wire[6:0] disp_seg;
 wire[7:0] disp_an;
 assign disp_seg_o[6:0] = ~disp_seg[6:0];
 assign disp_an_o[7:0] = ~disp_an[7:0];
+
+//Clock generation
+// color clock must be 141Mhz = 4.43mhz *32
+wire color_clk;
+wire dot_clk;
+wire rf_i;
+wire rf_q;
+wire audio_clk;
+
+clock_gen clock_gen_i (
+    .reset(reset),
+    .clk(color_clk),
+    .rf_i(rf_i),
+    .rf_q(rf_q),
+    .audio_clock(audio_clk),
+    .dot_clock(dot_clk)
+);
+
+//Rf modulator
+wire[6:0] rf = 
+    color_clk ? 
+        63+(63-(composite)):
+        63-(63-(composite));
+
+//experiment with RF modulator
+assign vga_blue_o = rf[6:2];
+
 
 hex7segment u_hex7segment(
                 .clk(dot_clk),
@@ -162,8 +192,7 @@ hex7segment u_hex7segment(
 
 clock_clk_wiz_0_0_clk_wiz clock_i
       (.clk_in1(clk_i),
-       .clk_color(color_clock),
-       .clk_dot(dot_clk),
+       .clk_color(color_clk),
        .locked(lock),
        .reset(1'b0));
 
@@ -208,7 +237,7 @@ c64_debug c64_debug_i(
               .uart_tx_byte_valid(uart_tx_byte_valid),
               .uart_tx_byte(uart_tx_byte),
               .debug_data_i(DoL),
-              .debug_data_o(Di),
+              .debug_data_o(debug_do),
               .debug_addr(Ai),
               .debug_we(WE),
               .debug_request(debug_request),
@@ -217,7 +246,7 @@ c64_debug c64_debug_i(
 
 always @(negedge phi2 ) begin
     DoL <= Do;
-    DiL <= Di;
+    debug_do_l <= debug_do;
 end
 
 always @(posedge phi2 ) begin
@@ -233,8 +262,10 @@ always @(posedge phi2 ) begin
         debug_ack <= 0;
 end
 
+assign Di = DMA ? debug_do_l : cart_data;
+
 c64 c64_e(
-        .color_carrier(color_clock),
+        .color_carrier(color_clk),
         .dot_clk(dot_clk ),
         .reset(reset | ~lock),
         .composite(composite),
@@ -254,7 +285,7 @@ c64 c64_e(
         .ROML(ROML),
         .ROMH(ROMH),
         .DMA(DMA),
-        .Di(DiL),
+        .Di(Di),
         .RW(WE),
         .GAME_n(sw_i[0]),
         .EXTROM_n(sw_i[1]),
@@ -278,19 +309,11 @@ c64 c64_e(
         .IO2()
     );
 
-/* 16kb cartrige */
-/*    rom #("DONKEYKO.HEX",14,16384) carrtrige_rom(
-    .clk(clk),
-    .a(  { ROML, Ao[12:0]} ),
-    .do(rom_data),
-    .enable(ROMH | ROML)
-  );
-*/
 /* PDM modulatio*/
 reg[14:0] pdm_acc;
 assign pwm_sdaudio_o = !reset ;
 assign pwm_audio_o = pdm_acc[14];
-always @(posedge color_clock ) begin
+always @(posedge color_clk ) begin
     if(pdm_acc[14]) begin
         pdm_acc = pdm_acc & 15'b011111111111111;
     end else begin
@@ -298,13 +321,14 @@ always @(posedge color_clock ) begin
     end
 end
 
-`ifdef XXX
-rom #("mr_tnt.hex",13,8192) carrtrige_rom(
+
+/* 8kb cartrige */
+rom #("diag.mif",13,8192) carrtrige_rom(
         .clk(dot_clk),
         .a(  Ao[12:0] ),
-        .do( rom_data ),
+        .do( cart_data ),
         .enable( ROML )
     );
-`endif
+
 
 endmodule

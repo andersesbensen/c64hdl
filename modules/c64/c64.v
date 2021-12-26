@@ -142,10 +142,22 @@ wire[7:0] vic_di = vic_aec ? bus_di : bus_do;
 wire color;
 wire[5:0] luma;
 wire GR_W;
-
 assign cass_motor = cpu_p[5];
 assign cass_wrt = cpu_p[3];
 assign composite = color ? luma + 16 : luma;
+
+//Fake a 50 hz clock
+reg tod;
+reg[15:0] tod_cnt;
+always @(posedge clk ) begin
+    if(reset) begin
+        tod_cnt<=0;
+        tod <=0;
+    end else if(tod_cnt == 10000) begin
+        tod_cnt <=0;
+        tod <=!tod;
+    end
+end
 
 vicii vicii_e (
            .do(vic_do),
@@ -256,7 +268,7 @@ mos6526 cia1 (
             .irq_n(cia1_irq_n),
             .flag_n(cass_rd),
             .pc_n(),
-            .tod(),
+            .tod(tod),
             .sp_in(),
             .sp_out(),
             .cnt_in(),
@@ -279,7 +291,7 @@ mos6526 cia2 (
             .irq_n(cia2_irq_n),
             .flag_n(),
             .pc_n(),
-            .tod(),
+            .tod(tod),
             .sp_in(),
             .sp_out(),
             .cnt_in(),

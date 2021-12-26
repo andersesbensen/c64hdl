@@ -46,47 +46,47 @@ initial begin
     rst_n<=1;
     @(posedge clk);
 
+
     //voice 1
     `write_reg(8'h00,8'h05) //FREQ  low
     `write_reg(8'h01,8'h24) // FREQ hi
     `write_reg(8'h02,8'h00) //PW lo
     `write_reg(8'h03,8'h08) //PW hi
     `write_reg(8'h04,8'h21) //control
-    `write_reg(8'h05,8'he3) //attack decay
-    `write_reg(8'h06,8'h36) // sustain release
+    `write_reg(8'h05,8'h41) //attack decay
+    `write_reg(8'h06,8'h47) // sustain release
     //voice 2
     `write_reg(8'h07,8'h05) //FREQ  low
     `write_reg(8'h08,8'h14) // FREQ hi
     `write_reg(8'h09,8'h00) //PW lo
     `write_reg(8'h0a,8'h08) //PW hi
     `write_reg(8'h0b,8'h21) //control
-    `write_reg(8'h0c,8'h26) //attack decay
-    `write_reg(8'h0d,8'h3a) // sustain release
+    `write_reg(8'h0c,8'h4e) //attack decay
+    `write_reg(8'h0d,8'h4f) // sustain release
     //voice 3
     `write_reg(8'h0e,8'h05) //FREQ  low
     `write_reg(8'h0f,8'ha4) // FREQ hi
     `write_reg(8'h10,8'h00) //PW lo
     `write_reg(8'h11,8'h08) //PW hi
     `write_reg(8'h12,8'h21) //control
-    `write_reg(8'h13,8'h63) //attack decay
-    `write_reg(8'h14,8'h31) // sustain release
+    `write_reg(8'h13,8'h4e) //attack decay
+    `write_reg(8'h14,8'h4f) // sustain release
 
     `write_reg(8'h15,8'h08)  //filt low
-    `write_reg(8'h16,8'h1f)  //filt hi
+    `write_reg(8'h16,8'h0f)  //filt hi
     `write_reg(8'h17,8'h17) //#filter route
-    `write_reg(8'h18,8'h1f) //Volume and low pass 
+    `write_reg(8'h18,8'h2f) //Volume and low pass 
 
 
     `write_reg(8'h04,8'h41)
-    repeat(10000) @(posedge clk);
-    `write_reg(8'h0b,8'h41)
+    /*`write_reg(8'h0b,8'h41)
     repeat(10000) @(posedge clk);
     `write_reg(8'h12,8'h41)
-
-    repeat(500000) @(posedge clk);
-    `write_reg(8'h04,8'h20)
-    `write_reg(8'h0b,8'h20)
-    `write_reg(8'h12,8'h20)
+*/
+    repeat(50000) @(posedge clk);
+    `write_reg(8'h04,8'h40)
+    `write_reg(8'h0b,8'h40)
+    `write_reg(8'h12,8'h40)
 
     repeat(100000) @(posedge clk);
 

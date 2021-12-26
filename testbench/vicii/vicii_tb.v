@@ -23,7 +23,7 @@ wire ba;
 integer i;
 
 reg[7:0] test_rom[16'hffff:0];
-
+reg[7:0] test_regs[16'h2f:0];
 wire[11:0] vic_data = aec ? vic_di : data_ram | {4'b0,data_rom};
 wire[13:0] bus_addr = aec ? cpu_addr : vic_aout;
 
@@ -81,11 +81,31 @@ initial begin
     #(CLK_PERIOD*3) rst_n<=1;
     #(CLK_PERIOD*3) rst_n<=0;clk<=0;
 
+    for(i = 0; i< 16'h2f; i=i+1) begin
+        vic_ain <= i;
+        test_regs[i]  = 0;
+    end
+
+    test_regs[12'h18] = 8'h04;
+    test_regs[12'h12] = 8'h0e;
+    test_regs[12'h11] = 8'h98;
+    test_regs[12'h16] = 8'hc8;
+    test_regs[12'h00] = 8'h80; //Sprite X
+    test_regs[12'h01] = 8'h80; //Sprite Y
+    test_regs[12'h02] = 8'h98; //Sprite X
+    test_regs[12'h03] = 8'h80; //Sprite Y
+
+    test_regs[12'h15] = 8'h03; //Sprite enable
+    test_regs[12'h17] = 8'h00; //Expand Y
+    test_regs[12'h1C] = 8'h02; //Multi color sprite
+    test_regs[12'h1D] = 8'h00; //Expand X
+    test_regs[12'h27] = 8'h07; //MIB Color
+    test_regs[12'h28] = 8'h0a; //MIB Color
 
     ram_we <= 1;
     for (i =0  ; i < 1000;i=i+1 ) begin
         cpu_addr = i[11:0];
-        vic_di = 12'h800 | i[7:0];
+        vic_di = {i[3:0], i[7:0]};
         repeat(8) @(posedge clk);
     end
     ram_we <=0;
@@ -95,43 +115,19 @@ initial begin
     rst_n<=1;
     @(posedge clk);
 
+
     vic_cs <=1;
     vic_we <=1;
 
+    for(i = 0; i< 16'h2f; i=i+1) begin
+        vic_ain <= i;
+        vic_di  <=  test_regs[i];
+        repeat(8) @(posedge clk);
+    end
 
-    /*for(i = 16'hd000; i< 16'hd030; i=i+1) begin
-      vic_ain <= i;
-      vic_di  <=  test_rom[i];
-      repeat(8) @(posedge clk);
-    end*/
-    // //Write VM and CB pointers
-    vic_ain <= 12'h18;
-    vic_di  <=  8'h04;
-    repeat(8) @(posedge clk);
+    vic_cs <=0;
+    vic_we <=0;
 
-    // //Write EC
-    vic_ain <= 12'h20;
-    vic_di  <= 12'he;
-    repeat(8) @(posedge clk);
-
-    // //Write B0
-    vic_ain <= 12'h21;
-    vic_di  <= 6'h00;
-    repeat(8) @(posedge clk);
-
-
-    //Write BLNK BMM
-    vic_ain <= 12'h11;
-    vic_di  <= 8'h98;
-    repeat(8) @(posedge clk);
-
-    // //Write MCM
-    vic_ain <= 12'h16;
-    vic_di  <= 8'hc8;
-    repeat(8) @(posedge clk);
-
-    vic_we <= 0;
-    vic_di  <= 8'h00;
 
     repeat(320000) @(posedge clk);
     $finish(2);

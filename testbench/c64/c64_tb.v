@@ -82,72 +82,23 @@ c64 c64_e(
         .joy2( 5'b11111)
     );
 
-/*
-  wire[7:0] iec_rx;
-  wire      iec_ready;
-
-  iec iec_i ( 
-    .reset_n(!reset),
-    .clk(phi2),
-    .atn(serial_atn),
-    .clock_i(serial_clock_o),
-    .data_i(serial_data_o),
-    .clock_o(serial_clock_i),
-    .data_o(serial_data_o),
-    .rx_byte(iec_rx),
-    .rx_ready(iec_ready)
-);*/
-
 
 /* 8kb cartrige */
-rom #("mr_tnt.hex",13,8192) carrtrige_rom(
+rom #("diag.mif",13,8192) carrtrige_rom(
         .clk(clk),
         .a(  Ao[12:0] ),
         .do( rom_data ),
         .enable( ROML )
     );
 
-/*
-  rom #("DONKEYKO.HEX",14,16384) carrtrige_rom(
-    .clk(clk),
-    .a(  { ROML, Ao[12:0]} ),
-    .do(rom_data),
-    .enable(ROMH | ROML)
-  );
-*/
-`ifdef DMA_TEST
-rom #("IKplus.hex",16,47687) test_rom(
-        .clk(phi2),
-        .a(offset[15:0]),
-        .do(data),
-        .enable(loading)
-    );
-
-always @(posedge phi2 ) begin
-    if(!reset) begin
-        loading <= 0;
-    end else if(loading) begin
-        DMA <=1;
-        if(!BA) begin
-            offset <= offset + 1;
-            load_addr <= load_addr + 1;
-            if(offset == 47687) loading <=0;
-        end
-    end else begin
-        DMA <= 0;
-        if(start_load) begin
-            loading <=1;
-            offset <= 2;
-            load_addr<= 16'h0801;//{prg[0],prg[1]};
-        end
-    end
-end
-`endif
 
 reg[7:0] cmd[0:9] ;
 integer i;
 
 initial begin
+    $dumpfile("c64.vcd");
+    $dumpvars(0, c64_e);
+
     //cmd = "LOAD \"$\",8";
     start_load = 0;
     loading =0;
@@ -164,51 +115,6 @@ initial begin
 
 
     $display("Running");
-
-    repeat(200000*8) #63 clk = ~clk;
-`ifdef DMA_TEST
-    $display("START DMA");
-
-    start_load<=1;
-    repeat(100*8) #63 clk = ~clk;
-    start_load<=0;
-
-    repeat(2000000*8) #63 clk = ~clk;
-    repeat(7) #63 clk = ~clk;
-
-    //Now type some suff into the keyboar buffer
-    DMA=1;
-    loading=1; //For setting write
-    for(i=0; i < 5; i=i+1) begin
-        load_addr = 631 + i;
-        data = cmd[i];
-        repeat(8) #63 clk = ~clk;
-    end
-    load_addr = 198;
-    data = 5;
-    repeat(8) #63 clk = ~clk;
-    DMA=0;
-    loading=0; //For setting write
-
-    repeat(8*64*312*8) #63 clk = ~clk;
-
-    DMA=1;
-    loading=1; //For setting write
-    for(i=0; i < 5; i=i+1) begin
-        load_addr = 631 + i;
-        data = cmd[5+i];
-        repeat(8) #63 clk = ~clk;
-    end
-    load_addr = 631 + 5;
-    data = 8'hd; //Charige return
-    repeat(8) #63 clk = ~clk;
-
-    load_addr = 198;
-    data = 6;
-    repeat(8) #63 clk = ~clk;
-    DMA=0;
-    loading=0; //For setting write
-`endif
 
 
     forever  #63 clk = ~clk;

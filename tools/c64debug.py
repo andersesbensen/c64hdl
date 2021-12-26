@@ -88,19 +88,24 @@ if (args.cmd):
     send_cmd("\r")
 
 if (args.snd):
-    write_reg(0xd400,0x5)
-    write_reg(0xd401,0x24)
-    write_reg(0xd402,0)
-    write_reg(0xd403,8)
-    write_reg(0xd405,0x63)
-    write_reg(0xd406,0x3e)
+    
+    osc = 0*7
+    write_reg(0xd400+osc,0x5)
+    write_reg(0xd401+osc,0x24)
+    write_reg(0xd402+osc,0)
+    write_reg(0xd403+osc,8)
+    write_reg(0xd405+osc,0x4e)
+    write_reg(0xd406+osc,0x47)
+
+
+
     write_reg(0xd415,0x01)
     write_reg(0xd416,0x2f)
-    write_reg(0xd417,0x31) #filter route
-    write_reg(0xd418,0x11) #Volume and low pass 
+    write_reg(0xd417,0x10) #filter route
+    write_reg(0xd418,0x2f) #Volume and low pass 
     #write_reg(0xd419,0xf)
-    write_reg(0xd404,0x21)
-    time.sleep(1)
-    write_reg(0xd404,0x20)
+    write_reg(0xd404+osc,0x41)
+    time.sleep(2)
+    write_reg(0xd404+osc,0x40)
 
-ser.close()             # close port
+ser.close()             # close portf

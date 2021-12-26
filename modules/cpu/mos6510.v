@@ -10,7 +10,6 @@ output reg [7:0] PO;
 input  [7:0] PI;
 input AEC;
 
-
 output WE;		// write enable
 input IRQ;		// interrupt request
 input NMI;		// non-maskable interrupt request
@@ -19,30 +18,33 @@ input RDY;		// Ready signal. Pauses CPU when RDY=0
 reg [7:0] DI_wrap;
 reg [7:0] DI_wrap2;
 
-reg [7:0] PD; //IO direction
-reg [7:0] ADDR1; //IO direction
 
-always @(negedge phi2)
+reg [7:0] PD; //IO direction
+reg [7:0] PO_wrap; //Delay PO output to negative edge
+
+always @(negedge phi2) begin
     if(AEC) DI_wrap2 <= DI;
+    PO <= PO_wrap;    
+end
 
 always @(posedge phi2)
 begin
     if(reset) begin
         //TODO this is no correct the real cpu resets this to 0
         // but there are pullups on the hiram and lowram lines
-        PO <= 8'h37;
+        PO_wrap <= 8'h37;
         PD <= 8'h37;
     end
     else if(WE & RDY)
     case ( AB )
         0: PD <= DO;
-        1: PO <= DO & PD;
+        1: PO_wrap <= DO & PD;
     endcase
     else
         if(RDY)
         case ( AB )
             0: DI_wrap <= PD;
-            1: DI_wrap <= (PO & PD) | (PI & ~PD);
+            1: DI_wrap <= (PO_wrap & PD) | (PI & ~PD);
             default:
                 DI_wrap <= DI_wrap2;
         endcase
@@ -51,6 +53,8 @@ begin
 end
 
 //assign DI_wrap = ADDR1 | DI;
+
+
 
 cpu cpu_e(
         .clk(phi2),

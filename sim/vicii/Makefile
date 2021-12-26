@@ -12,6 +12,7 @@ local: sim_pre_cmd simulation sim_post_cmd
 
 VERILOG_SRC := ../../modules/c64/ram.v \
 ../../modules/c64/rom.v \
+../../modules/clock/clock_gen.v \
 ../../modules/vicii/vicii.v \
 ../../modules/vicii/vicii_palette.v \
 ../../modules/vicii/vicii_sprite.v \
@@ -19,6 +20,7 @@ VERILOG_SRC := ../../modules/c64/ram.v \
 
 VERILOG_OBJ := work/ram/.ram_v \
 work/rom/.rom_v \
+work/clock_gen/.clock_gen_v \
 work/vicii/.vicii_v \
 work/vicii_palette/.vicii_palette_v \
 work/vicii_sprite/.vicii_sprite_v \
@@ -44,6 +46,11 @@ work/rom/.rom_v: ../../modules/c64/rom.v
 		@mkdir -p $(dir $@) && touch $@
 
 
+work/clock_gen/.clock_gen_v: ../../modules/clock/clock_gen.v
+		echo $< >> run.command
+		@mkdir -p $(dir $@) && touch $@
+
+
 work/vicii/.vicii_v: ../../modules/vicii/vicii.v \
 work/vicii_palette/.vicii_palette_v \
 work/vicii_sprite/.vicii_sprite_v
@@ -64,6 +71,7 @@ work/vicii_sprite/.vicii_sprite_v: ../../modules/vicii/vicii_sprite.v
 work/vicii_tb/.vicii_tb_v: ../../testbench/vicii/vicii_tb.v \
 work/ram/.ram_v \
 work/rom/.rom_v \
+work/clock_gen/.clock_gen_v \
 work/vicii/.vicii_v
 		echo $< >> run.command
 		@mkdir -p $(dir $@) && touch $@

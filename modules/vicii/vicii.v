@@ -145,9 +145,9 @@ end
 wire BKDE = (CSEL ? BKDE40 : BKDE38);
 wire VSW  = (RSEL ? VSW25 : VSW24);
 
-assign ao = vic_ao | 
-            sp_ao[0]| sp_ao[1]| sp_ao[2]| sp_ao[3]| 
-            sp_ao[4]| sp_ao[5]| sp_ao[6]| sp_ao[7];
+assign ao = vic_ao |
+       sp_ao[0]| sp_ao[1]| sp_ao[2]| sp_ao[3]|
+       sp_ao[4]| sp_ao[5]| sp_ao[6]| sp_ao[7];
 wire vic_ba = ((RC[2:0] == (Y[2:0])) & vic_enable &  EEVMF & VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
@@ -341,7 +341,7 @@ begin
             if(RC == (17+312-32)) VSYNC  <= 1; if(RC == (20+312-32)) VSYNC  <= 0;
             if(RC == (14+312-32)) VEQ    <= 1; if(RC == (23+312-32)) VEQ    <= 0;
             if(RC == (13+312-32)) VBLANK <= 1; if(RC == (24+312-32)) VBLANK <= 0;
-            
+
             if(RC == 55) VSW24 <= 1; if(RC == 247) VSW24 <= 0;
             if(RC == 51) VSW25 <= 1; if(RC == 251) VSW25 <= 0;
             if(RC == 48) EEVMF <= 1; if(RC == 248) EEVMF <= 0;
@@ -384,8 +384,8 @@ begin
 
         //In ECM mode the two MSB of D is uesd for color info
         vic_ao[13:0] <= ECM ? {CB1[3:1], 2'b0,D[VMLI][5:0], RCs[2:0] } :
-          BMM ? {CB1[3],             VC[9:0], RCs[2:0] } :
-          {CB1[3:1],      D[VMLI][7:0], RCs[2:0] };
+              BMM ? {CB1[3],             VC[9:0], RCs[2:0] } :
+              {CB1[3:1],      D[VMLI][7:0], RCs[2:0] };
     end
 
     if( g_access_enable & CW & (Xc[2:0] == C_DATA_PASE) ) begin
@@ -411,7 +411,7 @@ begin
     if(Xc == (456-16)) BURST <= 1; if(Xc == (492-16)) BURST <= 0;
     if(Xc == 178-16) HEQ1 <= 1;  if(Xc == 196-16) HEQ1 <= 0;
     if(Xc == 434-16) HEQ2 <= 1;  if(Xc == 452-16) HEQ2 <= 0;
-    
+
     //if(Xc == 35) BKDE38 <= 1; if(Xc == 339) BKDE38 <= 0;
     //if(Xc == 28) BKDE40 <= 1; if(Xc == 348) BKDE40 <= 0;
     if(Xc == 26) BKDE38 <= 1; if(Xc == 330) BKDE38 <= 0;
@@ -467,7 +467,7 @@ begin
     pixel[6] <= pixel[5];
     pixel[7] <= pixel[6];
 
-    // Sprite collision   
+    // Sprite collision
     if(EMMC && (sp_MMC & (sp_MMC - 1) != 0)) IMMC <= 1;
     if(EMCB && fg_enable && (sp_MCB != 0)) IMCB<= 1;
 
@@ -477,42 +477,42 @@ end
 // 8 sprite instances
 genvar n;
 generate for(n=0; n < 8; n=n+1) begin : sprites
-vicii_sprite #(.number(n)) sprite(
-  .clk(pixel_clock),
-  .reset(reset || !ME[n]),
-//  .di(di[7:0]),
-  .di(8'haa),
-  .VM1(VM1),
-  .Xc(Xc),
-  .Yc(RC[7:0]),
-  .XE(MXE[n]),
-  .YE(MYE[n]),
-  .X(MX[n]),
-  .Y(MY[n]),
-  .SC(MC[n]),
-  .SMC0(MM0),
-  .SMC1(MM1),
-  .MCM(MMC[n]),
-  .ao(sp_ao[n]),
-  .ba(sp_ba[n]),
-  .pixel_enable(sp_pixel_enable[n]),
-  .pixel(sp_pixel[n])
-  );
-end
+        vicii_sprite #(.number(n)) sprite(
+                         .clk(pixel_clock),
+                         .reset(reset || !ME[n]),
+                         .di(di[7:0]),
+                         //.di(8'haa),
+                         .VM1(VM1),
+                         .Xc(Xc),
+                         .Yc(RC[8:0]),
+                         .XE(MXE[n]),
+                         .YE(MYE[n]),
+                         .X(MX[n]),
+                         .Y({1'b0,MY[n]}),
+                         .SC(MC[n]),
+                         .SMC0(MM0),
+                         .SMC1(MM1),
+                         .MCM(MMC[n]),
+                         .ao(sp_ao[n]),
+                         .ba(sp_ba[n]),
+                         .pixel_enable(sp_pixel_enable[n]),
+                         .pixel(sp_pixel[n])
+                     );
+    end
 endgenerate
 
 
 
-wire[3:0] final_pixel = 
-  sp_pixel_enable[0] ? sp_pixel[0] :
-  sp_pixel_enable[1] ? sp_pixel[1] :
-  sp_pixel_enable[2] ? sp_pixel[2] :
-  sp_pixel_enable[3] ? sp_pixel[3] :
-  sp_pixel_enable[4] ? sp_pixel[4] :
-  sp_pixel_enable[5] ? sp_pixel[5] :
-  sp_pixel_enable[6] ? sp_pixel[6] :
-  sp_pixel_enable[7] ? sp_pixel[7] :
-  pixel[X];
+wire[3:0] final_pixel =
+    sp_pixel_enable[0] ? sp_pixel[0] :
+    sp_pixel_enable[1] ? sp_pixel[1] :
+    sp_pixel_enable[2] ? sp_pixel[2] :
+    sp_pixel_enable[3] ? sp_pixel[3] :
+    sp_pixel_enable[4] ? sp_pixel[4] :
+    sp_pixel_enable[5] ? sp_pixel[5] :
+    sp_pixel_enable[6] ? sp_pixel[6] :
+    sp_pixel_enable[7] ? sp_pixel[7] :
+    pixel[X];
 
 //sync signal
 wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
@@ -582,13 +582,13 @@ always @(posedge pixel_clock ) begin
         frame = frame +1;
     end
 
-    if (sp_ba>0) 
+    if (sp_ba>0)
         $fwrite(f,"0 255 0\n");
-    else if( HSYNC | VSYNC) 
+    else if( HSYNC | VSYNC)
         $fwrite(f,"255 255 255\n");
-    else if (BURST) 
+    else if (BURST)
         $fwrite(f,"100 0 0\n");
-    else if (VBLANK | HBLANK) 
+    else if (VBLANK | HBLANK)
         $fwrite(f,"10 10 10\n");
     else begin
         $fwrite(f,"%0d %0d %0d\n",
