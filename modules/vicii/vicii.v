@@ -120,6 +120,8 @@ reg g_access_enable;
 reg vic_enable;
 reg even;
 
+
+
 localparam C_ADDR_PASE = 0;
 localparam C_DATA_PASE = 2;
 localparam D_ADDR_PASE = 4;
@@ -150,8 +152,14 @@ wire vic_ba = ((RC[2:0] == (Y[2:0])) & vic_enable &  EEVMF & VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
 wire d_access = (vic_ba);
-assign irq_o =  ((ILP & ELP) | (IMMC & EMMC) | (IMCB & EMCB) | (IRST & ERST));
+assign irq_o =  (ILP | IMMC | IMCB | IRST );
 assign aec = !( g_access | ba );
+
+
+// Sprite collision
+wire[7:0] sp_MMC = MM & sp_pixel_enable;
+wire[7:0] sp_MCB = MD & sp_pixel_enable;
+wire fg_enable = g_data[7] ; // Is graphics unit emitting a front groud pixel
 
 //Register read write
 always @(posedge pixel_clock)
@@ -197,6 +205,14 @@ begin
             VC<= 0;
             VCBASE<=0;
             ME <=0;
+            VSYNC <=0;
+            HSYNC <=0;
+            VBLANK<=0;
+            HBLANK<=0;
+            VEQ<=0;
+            HEQ1<=0;
+            HEQ2<=0;
+            vic_enable <=0;
         end else if(we & cs & aec)
         begin
             $display("vic write %h %h",ai,di);
@@ -238,7 +254,7 @@ begin
                 8'h1D: MXE <=  di[7:0];
                 8'h1E: MM <= di[7:0];
                 8'h1F: MD <= di[7:0];
-                8'h20: EC <= di[7:0];
+                8'h20: EC <= di[3:0];
                 8'h21: B0 <= di[3:0];
                 8'h22: B1 <= di[3:0];
                 8'h23: B2 <= di[3:0];
@@ -312,7 +328,7 @@ begin
             // VERTICAL  DECODES
             even <= !even;
 
-            if(RC == RASTER_WATCH) IRST <= ERST;
+            if(((RC == RASTER_WATCH) && ERST)) IRST <= 1;
             if(RC == 311) begin
                 RC <= 0; //PAL
                 VCBASE <=0;
@@ -450,6 +466,11 @@ begin
     pixel[5] <= pixel[4];
     pixel[6] <= pixel[5];
     pixel[7] <= pixel[6];
+
+    // Sprite collision   
+    if(EMMC && (sp_MMC & (sp_MMC - 1) != 0)) IMMC <= 1;
+    if(EMCB && fg_enable && (sp_MCB != 0)) IMCB<= 1;
+
 end
 
 
@@ -459,10 +480,13 @@ generate for(n=0; n < 8; n=n+1) begin : sprites
 vicii_sprite #(.number(n)) sprite(
   .clk(pixel_clock),
   .reset(reset || !ME[n]),
-  .di(di[7:0]),
+//  .di(di[7:0]),
+  .di(8'haa),
   .VM1(VM1),
   .Xc(Xc),
   .Yc(RC[7:0]),
+  .XE(MXE[n]),
+  .YE(MYE[n]),
   .X(MX[n]),
   .Y(MY[n]),
   .SC(MC[n]),
@@ -476,6 +500,8 @@ vicii_sprite #(.number(n)) sprite(
   );
 end
 endgenerate
+
+
 
 wire[3:0] final_pixel = 
   sp_pixel_enable[0] ? sp_pixel[0] :
@@ -493,9 +519,6 @@ wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
 
 //Are we in the screen area
 wire[3:0] pixel_and_border = (BKDE & VSW & vic_enable) ? final_pixel : EC;
-
-
-
 
 reg[31:0] color_carrier;
 always @(posedge color_clock) begin
