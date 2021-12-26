@@ -79,7 +79,7 @@ always @(posedge clk ) begin
                 begin
                     if(envelope_counter == 8'hff) begin
                         state <= DECAY_SUSTAIN;
-                        rate  <= sustain_c;
+                        rate  <= decay_c;
                     end else
                         envelope_counter <= envelope_counter + 1;
                 end
