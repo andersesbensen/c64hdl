@@ -90,22 +90,26 @@ initial begin
     test_regs[12'h12] = 8'h0e;
     test_regs[12'h11] = 8'h98;
     test_regs[12'h16] = 8'hc8;
-    test_regs[12'h00] = 8'h80; //Sprite X
-    test_regs[12'h01] = 8'h80; //Sprite Y
+    
+    test_regs[12'h0E] = 8'h10; //Sprite X
+    test_regs[12'h0F] = 8'h80; //Sprite Y
     test_regs[12'h02] = 8'h98; //Sprite X
     test_regs[12'h03] = 8'h80; //Sprite Y
 
-    test_regs[12'h15] = 8'h03; //Sprite enable
+    test_regs[12'h10] = 8'h80; //Sprite X MSB
+
+    test_regs[12'h15] = 8'h83; //Sprite enable
     test_regs[12'h17] = 8'h00; //Expand Y
+    test_regs[12'h1B] = 8'h80; //MIB data prio
     test_regs[12'h1C] = 8'h02; //Multi color sprite
     test_regs[12'h1D] = 8'h00; //Expand X
-    test_regs[12'h27] = 8'h07; //MIB Color
+    test_regs[12'h2e] = 8'h07; //MIB Color
     test_regs[12'h28] = 8'h0a; //MIB Color
 
     ram_we <= 1;
     for (i =0  ; i < 1000;i=i+1 ) begin
         cpu_addr = i[11:0];
-        vic_di = {i[3:0], i[7:0]};
+        vic_di = {4'h01, i[7:0]};
         repeat(8) @(posedge clk);
     end
     ram_we <=0;

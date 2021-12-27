@@ -502,16 +502,17 @@ generate for(n=0; n < 8; n=n+1) begin : sprites
 endgenerate
 
 
-
+// Generate the final pixel which is a combination of sprites
+// and standard display
 wire[3:0] final_pixel =
-    sp_pixel_enable[0] ? sp_pixel[0] :
-    sp_pixel_enable[1] ? sp_pixel[1] :
-    sp_pixel_enable[2] ? sp_pixel[2] :
-    sp_pixel_enable[3] ? sp_pixel[3] :
-    sp_pixel_enable[4] ? sp_pixel[4] :
-    sp_pixel_enable[5] ? sp_pixel[5] :
-    sp_pixel_enable[6] ? sp_pixel[6] :
-    sp_pixel_enable[7] ? sp_pixel[7] :
+    sp_pixel_enable[0] && (!MDP[0] >= fg_enable) ? sp_pixel[0] :
+    sp_pixel_enable[1] && (!MDP[1] >= fg_enable) ? sp_pixel[1] :
+    sp_pixel_enable[2] && (!MDP[2] >= fg_enable) ? sp_pixel[2] :
+    sp_pixel_enable[3] && (!MDP[3] >= fg_enable) ? sp_pixel[3] :
+    sp_pixel_enable[4] && (!MDP[4] >= fg_enable) ? sp_pixel[4] :
+    sp_pixel_enable[5] && (!MDP[5] >= fg_enable) ? sp_pixel[5] :
+    sp_pixel_enable[6] && (!MDP[6] >= fg_enable) ? sp_pixel[6] :
+    sp_pixel_enable[7] && (!MDP[7] >= fg_enable) ? sp_pixel[7] :
     pixel[X];
 
 //sync signal
