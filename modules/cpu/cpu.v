@@ -864,7 +864,7 @@ assign DIMUX = ~RDY1 ? DIHOLD : DI;
 /*
  * Microcode state machine
  */
-always @(posedge clk or posedge reset)
+always @(posedge clk)
     if( reset )
         state <= BRK0;
     else if( RDY ) case( state )

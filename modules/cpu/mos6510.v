@@ -55,7 +55,6 @@ end
 //assign DI_wrap = ADDR1 | DI;
 
 
-
 cpu cpu_e(
         .clk(phi2),
         .reset(reset),

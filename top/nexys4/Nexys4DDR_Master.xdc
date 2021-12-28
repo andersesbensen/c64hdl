@@ -736,9 +736,8 @@ set_property PULLUP true [get_ports ps2_data]
 #// _clk_dot___7.88194______0.000______50.0______473.075____297.220
 #// clk_color__141.87500______0.000______50.0______268.465____297.220
 create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports clk_i]
-create_clock -period   7.880 [get_pins c64_e/dot_clk]
-create_clock -period   0.985 [get_pins c64_e/phi2]
-
-create_clock -period 141.884 [get_pins c64_e/color_carrier]
+#create_clock -period   7.880 [get_pins c64_e/dot_clk]
+#create_clock -period   0.985 [get_pins c64_e/phi2]
+#create_clock -period 141.884 [get_pins c64_e/color_carrier]
 
 

@@ -207,7 +207,9 @@ uart_tx uart_tx_i (
             .i_Clock(dot_clk),
             .i_Tx_DV(uart_tx_byte_valid),
             .i_Tx_Byte( uart_tx_byte ),
-            .o_Tx_Serial(RsTx)
+            .o_Tx_Serial(RsTx),
+            .o_Tx_Active(),
+            .o_Tx_Done()
         );
 
 ps2host ps2host_i(

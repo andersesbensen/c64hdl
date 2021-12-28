@@ -51,7 +51,7 @@ always @(posedge clk) begin
                 //row 0
                 8'h66: key_matrix[0][0]<= press; //Backspace
                 8'h5A: key_matrix[0][1]<= press; //Return
-                8'h6B: key_matrix[0][2]<= press; //cursor left/right
+                8'h0d: key_matrix[0][2]<= press; //cursor left/right
                 8'h83: key_matrix[0][3]<= press; //F7
                 8'h05: key_matrix[0][4]<= press; //F1
                 8'h04: key_matrix[0][5]<= press; //F3
@@ -102,14 +102,14 @@ always @(posedge clk) begin
                 8'h4B: key_matrix[5][2]<= press; //L
                 8'h7B: key_matrix[5][3]<= press; //-
                 8'h71: key_matrix[5][4]<= press; //.
-                8'h4C: key_matrix[5][5]<= press; //:
+                8'h54: key_matrix[5][5]<= press; //:
                 8'h52: key_matrix[5][6]<= press; //@
                 8'h41: key_matrix[5][7]<= press; //,
 
                 //row6
                 8'h0e : key_matrix[6][0]<= press; //$
                 8'h5D : key_matrix[6][1]<= press; //\
-                8'h4C : key_matrix[6][2]<= press; //;
+                8'h5b : key_matrix[6][2]<= press; //;
                 8'h6C : if(extended) key_matrix[6][3]<= press; // Clear/Home
                 8'h59 : key_matrix[6][4]<= press; // Right shift
                 8'h55 : key_matrix[6][5]<= press; // =
