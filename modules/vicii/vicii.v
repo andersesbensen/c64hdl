@@ -34,17 +34,18 @@ module vicii (
 //public registers
 wire[8:0] MX[7:0];
 wire[7:0] MY[7:0];
-reg ECM,BMM,BLNK,RSEL;
-reg[2:0] Y;
+wire ECM,BMM,BLNK,RSEL;
+wire[2:0] Y;
 reg[8:0] RC;
 wire[7:0] LPX,LPY; //lightpen
 wire[7:0] ME; //Mib Enable
-reg RES,MCM,CSEL;
-reg[2:0] X;
+wire RES,MCM,CSEL;
+wire[2:0] X;
 wire[7:0] MYE;// MIB Y-expand
-reg[3:0] VM1,CB1; //Memory Pointers note CB1[0] is not used
+wire[3:0] VM1; //Memory Pointers note CB1[0] is not used
+wire[3:0] CB1; //Memory Pointers note CB1[0] is not used
 reg     ILP, IMMC,IMCB,IRST; // Interrupt Register
-reg     ELP, EMMC,EMCB,ERST; // Enable Interrupt Register
+wire ELP, EMMC,EMCB,ERST; // Enable Interrupt Register
 wire[7:0] MDP; //MIB-DATA Priority
 wire[7:0] MMC; //MIB Multicolor Sel
 wire[7:0] MXE; //MIB X-expand
@@ -114,7 +115,7 @@ wire [4:0] chroma; // color phase adjustment
 wire [4:0] luma;   // luma
 wire chroma_en;   // color phase enable
 
-reg[8:0] RASTER_WATCH;
+wire[8:0] RASTER_WATCH;
 reg g_access;
 reg g_access_enable;
 reg vic_enable;
@@ -188,12 +189,38 @@ assign MYE = R[8'h17];
 assign ME =  R[8'h15];
 
 
+//Pointers
+assign VM1 = R[8'h18][7:4];
+assign CB1 = R[8'h18][3:0];
+
+// Interupt enable
+assign ELP  = R[8'h1A][3];
+assign EMMC = R[8'h1A][2];
+assign EMCB = R[8'h1A][1];
+assign ERST = R[8'h1A][0];
+
+
 //Color registers
 assign EC =  R[8'h20][3:0];
 assign B0 =  R[8'h21][3:0];
 assign B1 =  R[8'h22][3:0];
 assign B2 =  R[8'h23][3:0];
 assign B3 =  R[8'h24][3:0];
+
+// Generic registers
+assign RASTER_WATCH[8] = R[8'h11][7];
+assign ECM  = R[8'h11][6];
+assign BMM  = R[8'h11][5];
+assign BLNK = R[8'h11][4];
+assign RSEL = R[8'h11][3];
+assign Y = R[8'h11][2:0];
+
+assign RASTER_WATCH[7:0] = R[8'h12];
+
+assign RES = R[8'h16][5];
+assign MCM  = R[8'h16][4];
+assign CSEL = R[8'h16][3];
+assign X    = R[8'h16][2:0];
 
 
 //Register read write
@@ -206,30 +233,19 @@ begin
 
     if((Xc[2:0] == 4) ) begin
         if(reset) begin
-            CB1 <=0;
-            VM1 <=0;
-            CSEL <=0;
-            RSEL <=0;
-            Y<=0;
-            X<=0;
+            for (i =0  ; i < 46 ;i=i+1 ) begin
+                R[i] <= 0;
+            end
+
+
             ILP <=0;
             IMMC <=0;
             IMCB <=0;
             IRST <=0;
-            ELP<=0;
-            ERST<=0;
-            EMCB<=0;
             EEVMF<=0;
-            EMMC<=0;
             VMBA<=0;
-            RASTER_WATCH <=0;
-            ECM <=0;
-            BMM <=0;
-            MCM <=0;
-            BLNK<=0;
             vic_ao <=0;
             RCs <=0;
-            RES<=0;
             VC<= 0;
             VCBASE<=0;
             VSYNC <=0;
@@ -245,26 +261,20 @@ begin
             $display("vic write %h %h",ai,di);
             R[ai] <= di;
             case (ai)
-                8'h11: { RASTER_WATCH[8],ECM,BMM,BLNK,RSEL, Y} <= di[7:0];
-                8'h12: RASTER_WATCH[7:0] <= di[7:0];
-                8'h16: { RES,MCM,CSEL,X} <= di[5:0];
-                8'h18: {VM1,CB1} <= di[7:0];
                 /*
                   When an interrupts occurs, the
                   corresponding bit in the latch is set. To clear it, the processor has to
                   write a "1" there "by hand".
                 */
                 8'h19: {ILP, IMMC,IMCB,IRST} <= {ILP, IMMC,IMCB,IRST} & (!di[3:0]);
-                8'h1A: {ELP, EMMC,EMCB,ERST} <= di[3:0];
             endcase
         end else if(cs)
         case (ai)
-            8'h11: do[7:0] <=  { RC[8],ECM,BMM,BLNK,RSEL, Y};
-            8'h12: do[7:0] <=  RC[7:0];
-            8'h16: do[5:0] <=  { RES,MCM,CSEL,X};
-            8'h18: do[7:0] <=  {VM1,CB1};
+            8'h11: do <=  { RC[8],ECM,BMM,BLNK,RSEL, Y};
+            8'h12: do <=  RC[7:0];
+            8'h16: do <=  {2'b11, RES,MCM,CSEL,X};
             8'h19: do <= { irq_o,3'b111,ILP, IMMC,IMCB,IRST};
-            8'h1A: do[3:0] <=  {ELP, EMMC,EMCB,ERST};
+            8'h1A: do <=  {4'b1111,ELP, EMMC,EMCB,ERST};
             default:
                 if(ai >= 8'h20)
                     do <= {4'b1111,R[ai][3:0]};
