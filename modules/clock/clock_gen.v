@@ -31,6 +31,9 @@ reg[16:0] audio_acc;
 initial begin
     dot_acc   <= 0;
     audio_acc <= 0;    
+    rf_acc_i  <= 0;
+    rf_acc_q  <= 16384; //90 degrees phase shift
+
 end
 
 assign rf_i = rf_acc_i[15];
@@ -39,15 +42,10 @@ assign dot_clock = dot_acc[15];
 assign audio_clock = audio_acc[15];
 
 always @(posedge clk ) begin
-    if(reset) begin
-        rf_acc_i  <= 0;
-        rf_acc_q  <= 16384; //90 degrees phase shift
-    end else begin
-        rf_acc_i <= rf_acc_i   + 27715;
-        rf_acc_q <= rf_acc_q   + 27715;
-        dot_acc <= dot_acc     + 3640;
-        audio_acc <= audio_acc + 2541;
-    end
+    rf_acc_i <= rf_acc_i   + 28639;
+    rf_acc_q <= rf_acc_q   + 28639;
+    dot_acc <= dot_acc     + 3640;
+    audio_acc <= audio_acc + 2541;
 end
 
 
