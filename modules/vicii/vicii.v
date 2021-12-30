@@ -37,26 +37,26 @@ wire[7:0] MY[7:0];
 reg ECM,BMM,BLNK,RSEL;
 reg[2:0] Y;
 reg[8:0] RC;
-reg[7:0] LPX,LPY; //lightpen
-reg[7:0] ME; //Mib Enable
+wire[7:0] LPX,LPY; //lightpen
+wire[7:0] ME; //Mib Enable
 reg RES,MCM,CSEL;
 reg[2:0] X;
-reg[7:0] MYE;// MIB Y-expand
+wire[7:0] MYE;// MIB Y-expand
 reg[3:0] VM1,CB1; //Memory Pointers note CB1[0] is not used
 reg     ILP, IMMC,IMCB,IRST; // Interrupt Register
 reg     ELP, EMMC,EMCB,ERST; // Enable Interrupt Register
-reg[7:0] MDP; //MIB-DATA Priority
-reg[7:0] MMC; //MIB Multicolor Sel
-reg[7:0] MXE; //MIB X-expand
-reg[7:0] MM; // MIB-MIB Collision
-reg[7:0] MD; //MIB-DATA Collision
-reg[3:0] EC; //Exterior Color
-reg[3:0] B0; //Bkgd #0 Color
-reg[3:0] B1; //Bkgd #0 Color
-reg[3:0] B2; //Bkgd #0 Color
-reg[3:0] B3; //Bkgd #0 Color
-reg[3:0] MM0; //MIB Multicolor #0
-reg[3:0] MM1; //MIB Multicolor #1
+wire[7:0] MDP; //MIB-DATA Priority
+wire[7:0] MMC; //MIB Multicolor Sel
+wire[7:0] MXE; //MIB X-expand
+wire[7:0] MM; // MIB-MIB Collision
+wire[7:0] MD; //MIB-DATA Collision
+wire[3:0] EC; //Exterior Color
+wire[3:0] B0; //Bkgd #0 Color
+wire[3:0] B1; //Bkgd #0 Color
+wire[3:0] B2; //Bkgd #0 Color
+wire[3:0] B3; //Bkgd #0 Color
+wire[3:0] MM0; //MIB Multicolor #0
+wire[3:0] MM1; //MIB Multicolor #1
 wire[3:0] MC[7:0]; //M0C3 M0C2 M0C1 M0C0 MIB 0 Color
 
 /*Internal registers*/
@@ -176,6 +176,25 @@ generate for(n=0; n < 8; n=n+1) begin : sprite_regs
     end
 endgenerate
 
+assign MDP = R[8'h1B];
+assign MMC = R[8'h1C];
+assign MXE = R[8'h1D];
+assign MM = R[8'h1E];
+assign MD = R[8'h1F];
+
+assign MM0 = R[8'h25][3:0];
+assign MM1 = R[8'h26][3:0];
+assign MYE = R[8'h17];
+assign ME =  R[8'h15];
+
+
+//Color registers
+assign EC =  R[8'h20][3:0];
+assign B0 =  R[8'h21][3:0];
+assign B1 =  R[8'h22][3:0];
+assign B2 =  R[8'h23][3:0];
+assign B3 =  R[8'h24][3:0];
+
 
 //Register read write
 always @(posedge pixel_clock)
@@ -189,11 +208,6 @@ begin
         if(reset) begin
             CB1 <=0;
             VM1 <=0;
-            B0  <=8'h3;
-            B1  <=0;
-            B2  <=0;
-            B3  <=0;
-            EC  <=0;
             CSEL <=0;
             RSEL <=0;
             Y<=0;
@@ -208,8 +222,6 @@ begin
             EEVMF<=0;
             EMMC<=0;
             VMBA<=0;
-            LPX<=0;
-            LPY<=0;
             RASTER_WATCH <=0;
             ECM <=0;
             BMM <=0;
@@ -220,7 +232,6 @@ begin
             RES<=0;
             VC<= 0;
             VCBASE<=0;
-            ME <=0;
             VSYNC <=0;
             HSYNC <=0;
             VBLANK<=0;
@@ -236,11 +247,7 @@ begin
             case (ai)
                 8'h11: { RASTER_WATCH[8],ECM,BMM,BLNK,RSEL, Y} <= di[7:0];
                 8'h12: RASTER_WATCH[7:0] <= di[7:0];
-                8'h13: LPX[7:0] <= di[7:0];
-                8'h14: LPY[7:0] <= di[7:0];
-                8'h15: ME[7:0] <= di[7:0];
                 8'h16: { RES,MCM,CSEL,X} <= di[5:0];
-                8'h17: MYE <=di[7:0];
                 8'h18: {VM1,CB1} <= di[7:0];
                 /*
                   When an interrupts occurs, the
@@ -249,43 +256,15 @@ begin
                 */
                 8'h19: {ILP, IMMC,IMCB,IRST} <= {ILP, IMMC,IMCB,IRST} & (!di[3:0]);
                 8'h1A: {ELP, EMMC,EMCB,ERST} <= di[3:0];
-                8'h1B: MDP <=  di[7:0];
-                8'h1C: MMC <=  di[7:0];
-                8'h1D: MXE <=  di[7:0];
-                8'h1E: MM <= di[7:0];
-                8'h1F: MD <= di[7:0];
-                8'h20: EC <= di[3:0];
-                8'h21: B0 <= di[3:0];
-                8'h22: B1 <= di[3:0];
-                8'h23: B2 <= di[3:0];
-                8'h24: B3 <= di[3:0];
-                8'h25: MM0 <= di[3:0];
-                8'h26: MM1 <= di[3:0];
             endcase
         end else if(cs)
         case (ai)
             8'h11: do[7:0] <=  { RC[8],ECM,BMM,BLNK,RSEL, Y};
             8'h12: do[7:0] <=  RC[7:0];
-            8'h13: do[7:0] <=  LPX[7:0];
-            8'h14: do[7:0] <=  LPY[7:0];
-            8'h15: do[7:0] <=  ME[7:0];
             8'h16: do[5:0] <=  { RES,MCM,CSEL,X};
-            8'h17: do[7:0] <=  MYE;
             8'h18: do[7:0] <=  {VM1,CB1};
             8'h19: do <= { irq_o,3'b111,ILP, IMMC,IMCB,IRST};
             8'h1A: do[3:0] <=  {ELP, EMMC,EMCB,ERST};
-            8'h1B: do[7:0] <=  MDP;
-            8'h1C: do[7:0] <=  MMC ;
-            8'h1D: do[7:0] <=  MXE ;
-            8'h1E: do[7:0] <=  MM ;
-            8'h1F: do[7:0] <=  MD;
-            8'h20: do[7:0] <=  EC;
-            8'h21: do[3:0] <=  B0;
-            8'h22: do[3:0] <=  B1;
-            8'h23: do[3:0] <=  B2;
-            8'h24: do[3:0] <=  B3;
-            8'h25: do[3:0] <=  MM0;
-            8'h26: do[3:0] <=  MM1;
             default:
                 if(ai >= 8'h20)
                     do <= {4'b1111,R[ai][3:0]};
