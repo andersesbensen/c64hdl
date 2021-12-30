@@ -32,8 +32,8 @@ module vicii (
            input reset
        );
 //public registers
-reg[8:0] MX[7:0];
-reg[7:0] MY[7:0];
+wire[8:0] MX[7:0];
+wire[7:0] MY[7:0];
 reg ECM,BMM,BLNK,RSEL;
 reg[2:0] Y;
 reg[8:0] RC;
@@ -57,7 +57,7 @@ reg[3:0] B2; //Bkgd #0 Color
 reg[3:0] B3; //Bkgd #0 Color
 reg[3:0] MM0; //MIB Multicolor #0
 reg[3:0] MM1; //MIB Multicolor #1
-reg[3:0] MC[7:0]; //M0C3 M0C2 M0C1 M0C0 MIB 0 Color
+wire[3:0] MC[7:0]; //M0C3 M0C2 M0C1 M0C0 MIB 0 Color
 
 /*Internal registers*/
 reg[8:0] Xc; //Pixel X 0-504
@@ -161,6 +161,22 @@ wire[7:0] sp_MMC = MM & sp_pixel_enable;
 wire[7:0] sp_MCB = MD & sp_pixel_enable;
 wire fg_enable = g_data[7] ; // Is graphics unit emitting a front groud pixel
 
+genvar n;
+
+//Regiter bank
+reg[7:0] R[46:0];
+
+
+// Sprite register assignment
+generate for(n=0; n < 8; n=n+1) begin : sprite_regs
+        assign MX[n][7:0] = R[n*2];
+        assign MY[n]      = R[n*2+1];
+        assign MX[n][8]   = R[8'h10][n];
+        assign MC[n]      = R[8'h27+n];
+    end
+endgenerate
+
+
 //Register read write
 always @(posedge pixel_clock)
 begin
@@ -216,24 +232,8 @@ begin
         end else if(we & cs & aec)
         begin
             $display("vic write %h %h",ai,di);
+            R[ai] <= di;
             case (ai)
-                8'h00: MX[0][7:0] <=di[7:0];
-                8'h01: MY[0][7:0] <=di[7:0];
-                8'h02: MX[1][7:0] <=di[7:0];
-                8'h03: MY[1][7:0] <=di[7:0];
-                8'h04: MX[2][7:0] <=di[7:0];
-                8'h05: MY[2][7:0] <=di[7:0];
-                8'h06: MX[3][7:0] <=di[7:0];
-                8'h07: MY[3][7:0] <=di[7:0];
-                8'h08: MX[4][7:0] <=di[7:0];
-                8'h09: MY[4][7:0] <=di[7:0];
-                8'h0A: MX[5][7:0] <=di[7:0];
-                8'h0B: MY[5][7:0] <=di[7:0];
-                8'h0C: MX[6][7:0] <=di[7:0];
-                8'h0D: MY[6][7:0] <=di[7:0];
-                8'h0E: MX[7][7:0] <=di[7:0];
-                8'h0F: MY[7][7:0] <=di[7:0];
-                8'h10: {MX[7][8],MX[6][8],MX[5][8],MX[4][8],MX[3][8],MX[2][8],MX[1][8],MX[0][8]} <= di[7:0];
                 8'h11: { RASTER_WATCH[8],ECM,BMM,BLNK,RSEL, Y} <= di[7:0];
                 8'h12: RASTER_WATCH[7:0] <= di[7:0];
                 8'h13: LPX[7:0] <= di[7:0];
@@ -261,34 +261,9 @@ begin
                 8'h24: B3 <= di[3:0];
                 8'h25: MM0 <= di[3:0];
                 8'h26: MM1 <= di[3:0];
-                8'h27: MC[0] <= di[3:0];
-                8'h28: MC[1] <= di[3:0];
-                8'h29: MC[2] <= di[3:0];
-                8'h2A: MC[3] <= di[3:0];
-                8'h2B: MC[4] <= di[3:0];
-                8'h2C: MC[5] <= di[3:0];
-                8'h2D: MC[6] <= di[3:0];
-                8'h2E: MC[7] <= di[3:0];
             endcase
         end else if(cs)
         case (ai)
-            8'h00:do[7:0] <=  MX[0][7:0];
-            8'h01:do[7:0] <=  MY[0][7:0];
-            8'h02:do[7:0] <=  MX[1][7:0];
-            8'h03:do[7:0] <=  MY[1][7:0];
-            8'h04:do[7:0] <=  MX[2][7:0];
-            8'h05:do[7:0] <=  MY[2][7:0];
-            8'h06: do[7:0] <=  MX[3][7:0];
-            8'h07: do[7:0] <=  MY[3][7:0];
-            8'h08: do[7:0] <=  MX[4][7:0];
-            8'h09: do[7:0] <=  MY[4][7:0];
-            8'h0A: do[7:0] <=  MX[5][7:0];
-            8'h0B: do[7:0] <=  MY[5][7:0];
-            8'h0C: do[7:0] <=  MX[6][7:0];
-            8'h0D: do[7:0] <=  MY[6][7:0];
-            8'h0E: do[7:0] <=  MX[7][7:0];
-            8'h0F: do[7:0] <=  MY[7][7:0];
-            8'h10: do[7:0] <=  {MX[7][8],MX[6][8],MX[5][8],MX[4][8],MX[3][8],MX[2][8],MX[1][8],MX[0][8]};
             8'h11: do[7:0] <=  { RC[8],ECM,BMM,BLNK,RSEL, Y};
             8'h12: do[7:0] <=  RC[7:0];
             8'h13: do[7:0] <=  LPX[7:0];
@@ -297,6 +272,7 @@ begin
             8'h16: do[5:0] <=  { RES,MCM,CSEL,X};
             8'h17: do[7:0] <=  MYE;
             8'h18: do[7:0] <=  {VM1,CB1};
+            8'h19: do <= { irq_o,3'b111,ILP, IMMC,IMCB,IRST};
             8'h1A: do[3:0] <=  {ELP, EMMC,EMCB,ERST};
             8'h1B: do[7:0] <=  MDP;
             8'h1C: do[7:0] <=  MMC ;
@@ -310,16 +286,13 @@ begin
             8'h24: do[3:0] <=  B3;
             8'h25: do[3:0] <=  MM0;
             8'h26: do[3:0] <=  MM1;
-            8'h27: do[7:0] <=  MC[0];
-            8'h28: do[7:0] <=  MC[1];
-            8'h29: do[7:0] <=  MC[2];
-            8'h2A: do[7:0] <=  MC[3];
-            8'h2B: do[7:0] <=  MC[4];
-            8'h2C: do[7:0] <=  MC[5];
-            8'h2D: do[7:0] <=  MC[6];
-            8'h2E: do[7:0] <=  MC[7];
             default:
-                do <= 8'hff;
+                if(ai >= 8'h20)
+                    do <= {4'b1111,R[ai][3:0]};
+                else if (ai >= 8'h2f)
+                    do <= 8'hff;  
+                else
+                    do <= R[ai];
         endcase
         else
             do <= 8'h00; //Not enable
@@ -475,7 +448,6 @@ end
 
 
 // 8 sprite instances
-genvar n;
 generate for(n=0; n < 8; n=n+1) begin : sprites
         vicii_sprite #(.number(n)) sprite(
                          .clk(pixel_clock),
