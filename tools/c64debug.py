@@ -39,15 +39,14 @@ def send_cmd(cmd):
 
 
 parser = argparse.ArgumentParser(description='Read or wirte C64 bus.')
-parser.add_argument('-read')
-parser.add_argument('-prg', help="upload prg file")
+parser.add_argument('-read',help="read a number of bytes(in hex)")
+parser.add_argument('-prg', help="upload PRG file")
 parser.add_argument('-snd',action="store_true", help="play sound")
 
-parser.add_argument('-write')
+parser.add_argument('-write', help="Write a hex sequence")
 parser.add_argument('-offset', help='offset in hex', default="00")
-parser.add_argument('-serial',default='/dev/ttyUSB1')
-
-parser.add_argument('-cmd')
+parser.add_argument('-serial', help="Serial device to use",default='/dev/ttyUSB1')
+parser.add_argument('-cmd', help="Inject a line into the BASIC keyboard buffer followed by RETURN.")
 
 
 args = parser.parse_args()
