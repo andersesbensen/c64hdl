@@ -87,24 +87,48 @@ initial begin
     end
 
     test_regs[12'h18] = 8'h04;
-    test_regs[12'h12] = 8'h0e;
+    test_regs[12'h12] = 8'h0e;  //Raster watch
     test_regs[12'h11] = 8'h98;
     test_regs[12'h16] = 8'hc8;
+
+    test_regs[12'h1A] = 8'h01; //Enable raster watch
+
+    test_regs[12'h00] = 8'h20; //Sprite X
+    test_regs[12'h01] = 8'h20; //Sprite Y
+    test_regs[12'h02] = 8'h40; //Sprite X
+    test_regs[12'h03] = 8'h40; //Sprite Y
+    test_regs[12'h04] = 8'h60; //Sprite X
+    test_regs[12'h05] = 8'h60; //Sprite Y
+    test_regs[12'h06] = 8'h80; //Sprite X
+    test_regs[12'h07] = 8'h80; //Sprite Y
+    test_regs[12'h08] = 8'ha0; //Sprite X
+    test_regs[12'h09] = 8'ha0; //Sprite Y
+    test_regs[12'h0a] = 8'hc0; //Sprite X
+    test_regs[12'h0b] = 8'hc0; //Sprite Y
+    test_regs[12'h0c] = 8'he0; //Sprite X
+    test_regs[12'h0d] = 8'he0; //Sprite Y
+    test_regs[12'h0e] = 8'h20; //Sprite X
+    test_regs[12'h0f] = 8'he0; //Sprite Y
+
+    test_regs[12'h10] = 8'h00; //Sprite X MSB
     
-    test_regs[12'h0E] = 8'h10; //Sprite X
-    test_regs[12'h0F] = 8'h80; //Sprite Y
-    test_regs[12'h02] = 8'h98; //Sprite X
-    test_regs[12'h03] = 8'h80; //Sprite Y
-
-    test_regs[12'h10] = 8'h80; //Sprite X MSB
-
-    test_regs[12'h15] = 8'h83; //Sprite enable
+    
+    test_regs[12'h15] = 8'hff; //Sprite enable
     test_regs[12'h17] = 8'h00; //Expand Y
-    test_regs[12'h1B] = 8'h80; //MIB data prio
-    test_regs[12'h1C] = 8'h02; //Multi color sprite
+    test_regs[12'h1B] = 8'h00; //MIB data prio
+    test_regs[12'h1C] = 8'h00; //Multi color sprite
     test_regs[12'h1D] = 8'h00; //Expand X
-    test_regs[12'h2e] = 8'h07; //MIB Color
-    test_regs[12'h28] = 8'h0a; //MIB Color
+    
+    test_regs[12'h27] = 8'h01; //MIB Color
+    test_regs[12'h28] = 8'h09; //MIB Color
+    test_regs[12'h29] = 8'h03; //MIB Color
+    test_regs[12'h2a] = 8'h04; //MIB Color
+    test_regs[12'h2b] = 8'h05; //MIB Color
+    test_regs[12'h2c] = 8'h06; //MIB Color
+    test_regs[12'h2d] = 8'h07; //MIB Color
+    test_regs[12'h2e] = 8'h08; //MIB Color
+
+
 
     ram_we <= 1;
     for (i =0  ; i < 1000;i=i+1 ) begin
@@ -132,8 +156,22 @@ initial begin
     vic_cs <=0;
     vic_we <=0;
 
+    repeat(160000) @(posedge clk);
 
-    repeat(320000) @(posedge clk);
+
+    vic_cs <=1;
+    vic_we <=1;
+
+    //Clear RST interrupt
+    vic_ain <= 8'h19;
+    vic_di  <=  1;
+    repeat(8) @(posedge clk);
+
+    vic_cs <=0;
+    vic_we <=0;
+
+
+    repeat(160000) @(posedge clk);
     $finish(2);
 end
 

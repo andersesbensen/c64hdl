@@ -78,8 +78,8 @@ c64 c64_e(
         .serial_data_i(1'b0),
         .serial_clock_i(1'b0),
 
-        .joy1( 5'b11111),
-        .joy2( 5'b11111)
+        .joy_a( 5'b11111),
+        .joy_b( 5'b11111)
     );
 
 
@@ -115,6 +115,13 @@ initial begin
 
 
     $display("Running");
+
+
+    repeat(1000) #63 clk = ~clk;
+
+    reset = 0;
+    repeat(16*50) #63 clk = ~clk;
+    reset = 1;
 
 
     forever  #63 clk = ~clk;

@@ -136,6 +136,13 @@ wire[7:0] cart_do;
 wire debug_request;
 assign DMA = debug_dma;
 
+wire color_clk;
+wire dot_clk;
+wire rf_i;
+wire rf_q;
+wire audio_clk;
+
+
 assign led_o[2] = ROML;
 assign led_o[3] = ROMH;
 assign led_o[4] = (reset | ~lock);
@@ -155,11 +162,6 @@ assign disp_an_o[7:0] = ~disp_an[7:0];
 
 //Clock generation
 // color clock must be 141Mhz = 4.43mhz *32
-wire color_clk;
-wire dot_clk;
-wire rf_i;
-wire rf_q;
-wire audio_clk;
 
 clock_gen clock_gen_i (
     .reset(reset),
@@ -172,12 +174,12 @@ clock_gen clock_gen_i (
 
 //Rf modulator
 wire[6:0] rf = 
-    color_clk ? 
+    rf_i ? 
         63+(63-(composite)):
         63-(63-(composite));
 
 //experiment with RF modulator
-assign vga_blue_o = rf[6:2];
+assign vga_blue_o = rf[6:3];
 
 
 hex7segment u_hex7segment(
@@ -269,7 +271,7 @@ assign Di = DMA ? debug_do_l : cart_data;
 c64 c64_e(
         .color_carrier(color_clk),
         .dot_clk(dot_clk ),
-        .reset(reset | ~lock),
+        .reset(reset ),
         .composite(composite),
         .audio(audio),
         .keyboard_COL( kk_c ),
@@ -303,8 +305,8 @@ c64 c64_e(
       
         //Joystick
         //         f         r     l        d        u
-        .joy1( { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i } ),
-        .joy2(  5'b11111),
+        .joy_a( { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i } ),
+        .joy_b(  5'b11111),
         .BA(BA),
         .Do(Do),
         .IO1(),

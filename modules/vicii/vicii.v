@@ -18,11 +18,11 @@ module vicii (
            input[11:0] di,
            input[5:0] ai,
            output[13:0] ao,
-           output irq_o,
+           output irq_o, //This is inverted compared to the real vic
            input lp,
            input cs,
            input we,
-           output ba,
+           output ba, //This is inverted compared to the real vic
            output color_out,
            output[5:0] sync_lumen,
            output aec,
@@ -149,7 +149,7 @@ wire VSW  = (RSEL ? VSW25 : VSW24);
 assign ao = vic_ao |
        sp_ao[0]| sp_ao[1]| sp_ao[2]| sp_ao[3]|
        sp_ao[4]| sp_ao[5]| sp_ao[6]| sp_ao[7];
-wire vic_ba = ((RC[2:0] == (Y[2:0])) & vic_enable &  EEVMF & VMBA);
+wire vic_ba = ((RC[2:0] == (Y[2:0])) && vic_enable && EEVMF && VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
 wire d_access = (vic_ba);
@@ -237,7 +237,6 @@ begin
                 R[i] <= 0;
             end
 
-
             ILP <=0;
             IMMC <=0;
             IMCB <=0;
@@ -256,7 +255,7 @@ begin
             HEQ1<=0;
             HEQ2<=0;
             vic_enable <=0;
-        end else if(we & cs & aec)
+        end else if(we && cs && aec)
         begin
             $display("vic write %h %h",ai,di);
             R[ai] <= di;
@@ -266,7 +265,7 @@ begin
                   corresponding bit in the latch is set. To clear it, the processor has to
                   write a "1" there "by hand".
                 */
-                8'h19: {ILP, IMMC,IMCB,IRST} <= {ILP, IMMC,IMCB,IRST} & (!di[3:0]);
+                8'h19: {ILP, IMMC,IMCB,IRST} <= {ILP, IMMC,IMCB,IRST} & (~di[3:0]);
             endcase
         end else if(cs)
         case (ai)
