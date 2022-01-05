@@ -23,6 +23,7 @@ reg[23:0] debug_timeout;
 
 localparam DEBUG_READ_OP     = 1;
 localparam DEBUG_WRITE_OP    = 2;
+localparam DEBUG_WRITE_PS2   = 3;
 
 localparam DEBUG_IDLE        = 0;
 localparam DEBUG_WRITE       = 1;

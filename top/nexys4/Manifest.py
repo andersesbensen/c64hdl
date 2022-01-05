@@ -5,6 +5,5 @@ modules = {
         "../../modules/c64",
         "../../modules/uart",
         "../../modules/clock",
-
         "../../modules/misc"],
 }

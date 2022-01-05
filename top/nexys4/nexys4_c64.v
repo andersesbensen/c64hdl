@@ -173,13 +173,48 @@ clock_gen clock_gen_i (
 );
 
 //Rf modulator
-wire[6:0] rf = 
+
+wire[6:0] rf2 = 
     rf_i ? 
         63+(63-(composite)):
         63-(63-(composite));
-
 //experiment with RF modulator
-assign vga_blue_o = rf[6:3];
+assign vga_blue_o = rf2[6:3];
+
+
+
+//FM modulated audio at 5.5Mhz + 55.25
+reg[23:0] audio_acc;
+//(gdb) p (1<<24) *(5.5+55.25) / 141.8758
+always @(posedge color_clk ) begin
+    audio_acc <= audio_acc + 3591930+audio;
+end
+
+
+reg[3:0] rf_audio;
+//16 point to 4 bit sine
+always @(*) begin
+    case(audio_acc[22:19])
+    0 : rf_audio<=  8 ;
+    1 : rf_audio<=  10 ;
+    2 : rf_audio<=  13 ;
+    3 : rf_audio<=  14 ;
+    4 : rf_audio<=  15 ;
+    5 : rf_audio<=  14 ;
+    6 : rf_audio<=  13 ;
+    7 : rf_audio<=  10 ;
+    8 : rf_audio<=  8 ;
+    9 : rf_audio<=  5 ;
+    10 : rf_audio<=  2 ;
+    11 : rf_audio<=  1 ;
+    12 : rf_audio<=  0 ;
+    13 : rf_audio<=  1 ;
+    14 : rf_audio<=  2 ;
+    15 : rf_audio<=  5 ;
+    endcase
+end
+
+assign vga_green_o = rf_audio;
 
 
 hex7segment u_hex7segment(
@@ -312,6 +347,7 @@ c64 c64_e(
         .IO1(),
         .IO2()
     );
+
 
 /* PDM modulatio*/
 reg[14:0] pdm_acc;

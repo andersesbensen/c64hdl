@@ -42,8 +42,8 @@ assign dot_clock = dot_acc[15];
 assign audio_clock = audio_acc[15];
 
 always @(posedge clk ) begin
-    rf_acc_i <= rf_acc_i   + 28639;
-    rf_acc_q <= rf_acc_q   + 28639;
+    rf_acc_i <= rf_acc_i   + 25521;
+    rf_acc_q <= rf_acc_q   + 25521;
     dot_acc <= dot_acc     + 3640;
     audio_acc <= audio_acc + 2541;
 end
