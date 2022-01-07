@@ -13,11 +13,12 @@ module c64_debug (
            output reg       debug_we,
 
            output reg       debug_request,
+           output reg       ps2_request,
            input debug_ack
        )
        ;
 
-reg[3:0]  debug_state;
+reg[4:0]  debug_state;
 reg[23:0] debug_timeout;
 
 
@@ -33,6 +34,9 @@ localparam DEBUG_WRITE_DATA  = 4;
 localparam DEBUG_READ        = 5;
 localparam DEBUG_READ_ADDR1  = 6;
 localparam DEBUG_READ_ADDR2  = 7;
+localparam DEBUG_READ_PS2_1  = 8;
+localparam DEBUG_READ_PS2_2  = 9;
+localparam DEBUG_READ_PS2_3  = 10;
 
 always @(posedge clk ) begin
     if(reset) begin
@@ -55,6 +59,10 @@ always @(posedge clk ) begin
             DEBUG_IDLE: begin
                 if( uart_rx_byte == DEBUG_READ_OP) debug_state <= DEBUG_READ_ADDR1;
                 else if( uart_rx_byte == DEBUG_WRITE_OP ) debug_state <= DEBUG_WRITE_ADDR1;
+                else if( uart_rx_byte == DEBUG_WRITE_PS2 ) begin
+                    debug_state <= DEBUG_READ_PS2_1;
+                    ps2_request <=1;
+                end
             end
             DEBUG_WRITE_ADDR1: begin
                 debug_addr[15:8] <= uart_rx_byte;
@@ -79,6 +87,20 @@ always @(posedge clk ) begin
                 debug_we  <= 0;
                 debug_request <= 1;
             end
+            DEBUG_READ_PS2_1: begin
+                ps2_request <=1;
+                debug_state <= DEBUG_READ_PS2_2;
+            end
+            DEBUG_READ_PS2_2: begin
+                ps2_request <=0;
+                debug_state <= DEBUG_IDLE;
+            end
+//            DEBUG_READ_PS2_3: begin
+//                ps2_request <=0;
+//                debug_state <= DEBUG_IDLE;
+//            end
+        default:
+            ;
         endcase
     end else if( debug_request && debug_ack ) begin
         if(debug_state == DEBUG_READ_ADDR2) begin

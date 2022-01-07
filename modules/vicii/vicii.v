@@ -14,7 +14,7 @@
 
 
 module vicii (
-           output reg[7:0] do,
+           output[7:0] do,
            input[11:0] di,
            input[5:0] ai,
            output[13:0] ao,
@@ -26,7 +26,7 @@ module vicii (
            output color_out,
            output[5:0] sync_lumen,
            output aec,
-           input pixel_clock,
+           input dot_clk,
            input color_clock,
            output reg phi0,
            input reset
@@ -34,7 +34,7 @@ module vicii (
 //public registers
 wire[8:0] MX[7:0];
 wire[7:0] MY[7:0];
-wire ECM,BMM,BLNK,RSEL;
+wire ECM,BMM,DEN,RSEL;
 wire[2:0] Y;
 reg[8:0] RC;
 wire[7:0] LPX,LPY; //lightpen
@@ -98,7 +98,7 @@ reg[9:0] VCBASE;
 
 reg[5:0] VMLI; //index into the line ram
 reg[11:0] D[39:0]; //line ram
-reg[3:0] pixel[7:0]; //raster data
+reg[4:0] pixel[7:0]; //raster data, MSB is foregrund flag
 reg[7:0]  g_data;
 reg[11:0] c_data;
 
@@ -114,6 +114,8 @@ reg[13:0] vic_ao;
 wire [4:0] chroma; // color phase adjustment
 wire [4:0] luma;   // luma
 wire chroma_en;   // color phase enable
+
+reg[7:0] do_reg;
 
 wire[8:0] RASTER_WATCH;
 reg g_access;
@@ -146,6 +148,8 @@ end
 wire BKDE = (CSEL ? BKDE40 : BKDE38);
 wire VSW  = (RSEL ? VSW25 : VSW24);
 
+assign do = (cs && aec) ? do_reg : 0;
+
 assign ao = vic_ao |
        sp_ao[0]| sp_ao[1]| sp_ao[2]| sp_ao[3]|
        sp_ao[4]| sp_ao[5]| sp_ao[6]| sp_ao[7];
@@ -153,14 +157,11 @@ wire vic_ba = ((RC[2:0] == (Y[2:0])) && vic_enable && EEVMF && VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
 wire d_access = (vic_ba);
-assign irq_o =  (ILP | IMMC | IMCB | IRST );
+assign irq_o =  ((ELP && ILP) || (EMMC && IMMC) || (EMCB && IMCB) || (ERST && IRST) );
 assign aec = !( g_access | ba );
 
-
-// Sprite collision
-wire[7:0] sp_MMC = MM & sp_pixel_enable;
-wire[7:0] sp_MCB = MD & sp_pixel_enable;
-wire fg_enable = g_data[7] ; // Is graphics unit emitting a front groud pixel
+wire[4:0] current_pixel = pixel[X]; 
+wire fg_enable = current_pixel[4]; // Is foreground pixel?
 
 genvar n;
 
@@ -211,7 +212,7 @@ assign B3 =  R[8'h24][3:0];
 assign RASTER_WATCH[8] = R[8'h11][7];
 assign ECM  = R[8'h11][6];
 assign BMM  = R[8'h11][5];
-assign BLNK = R[8'h11][4];
+assign DEN = R[8'h11][4];
 assign RSEL = R[8'h11][3];
 assign Y = R[8'h11][2:0];
 
@@ -224,107 +225,129 @@ assign X    = R[8'h16][2:0];
 
 
 //Register read write
-always @(posedge pixel_clock)
+always @(posedge dot_clk)
 begin
     if(Xc[2:0] == 3)
         phi0 <=1;
     else if(Xc[2:0] == 7)
         phi0 <=0;
 
-    if((Xc[2:0] == 4) ) begin
-        if(reset) begin
-            for (i =0  ; i < 46 ;i=i+1 ) begin
-                R[i] <= 0;
-            end
+    if(reset) begin
+        for (i =0  ; i < 46 ;i=i+1 ) begin
+            R[i] <= 0;
+        end
 
-            ILP <=0;
-            IMMC <=0;
-            IMCB <=0;
-            IRST <=0;
-            EEVMF<=0;
-            VMBA<=0;
-            vic_ao <=0;
-            RCs <=0;
-            VC<= 0;
-            VCBASE<=0;
-            VSYNC <=0;
-            HSYNC <=0;
-            VBLANK<=0;
-            HBLANK<=0;
-            VEQ<=0;
-            HEQ1<=0;
-            HEQ2<=0;
-            vic_enable <=0;
-        end else if(we && cs && aec)
-        begin
-            $display("vic write %h %h",ai,di);
-            R[ai] <= di;
-            case (ai)
-                /*
-                  When an interrupts occurs, the
-                  corresponding bit in the latch is set. To clear it, the processor has to
-                  write a "1" there "by hand".
-                */
-                8'h19: {ILP, IMMC,IMCB,IRST} <= {ILP, IMMC,IMCB,IRST} & (~di[3:0]);
-            endcase
-        end else if(cs)
+        ILP <=0;
+        IMMC <=0;
+        IMCB <=0;
+        IRST <=0;
+        EEVMF<=0;
+        VMBA<=0;
+        vic_ao <=0;
+        RCs <=0;
+        VC<= 0;
+        VCBASE<=0;
+        VSYNC <=0;
+        HSYNC <=0;
+        VBLANK<=0;
+        HBLANK<=0;
+        VEQ<=0;
+        HEQ1<=0;
+        HEQ2<=0;
+        vic_enable <=0;
+        g_access_enable <=0;
+    end
+
+    if(we && cs && aec && (Xc[2:0] == 3))
+    begin
+        $display("vic write %h %h",ai,di);
+        do_reg <= 0;
         case (ai)
-            8'h11: do <=  { RC[8],ECM,BMM,BLNK,RSEL, Y};
-            8'h12: do <=  RC[7:0];
-            8'h16: do <=  {2'b11, RES,MCM,CSEL,X};
-            8'h19: do <= { irq_o,3'b111,ILP, IMMC,IMCB,IRST};
-            8'h1A: do <=  {4'b1111,ELP, EMMC,EMCB,ERST};
+            /*
+                When an interrupts occurs, the
+                corresponding bit in the latch is set. To clear it, the processor has to
+                write a "1" there "by hand".
+            */
+            8'h19: begin
+                /*if(di[0]) IRST <=0;
+                if(di[1]) IMCB <=0;
+                if(di[2]) IMMC <=0;
+                if(di[3]) ILP  <=0;*/
+                IRST <=0;
+                IMCB <=0;
+                IMMC <=0;
+                ILP  <=0;
+            end
             default:
-                if(ai >= 8'h20)
-                    do <= {4'b1111,R[ai][3:0]};
-                else if (ai >= 8'h2f)
-                    do <= 8'hff;  
-                else
-                    do <= R[ai];
-        endcase
-        else
-            do <= 8'h00; //Not enable
+                R[ai] <= di;
 
+        endcase
+    end 
+
+    //Read registers   
+    if(!we && cs && aec && (Xc[2:0] == 4))
+    case (ai)
+        8'h11: do_reg <=  { RC[8], R[ai][6:0] };
+        8'h12: do_reg <=  RC[7:0];
+        8'h16: do_reg <=  {2'b11, RES,MCM,CSEL,X};
+        8'h19: do_reg <=  { irq_o ,3'b111,ILP, IMMC,IMCB,IRST};
+        8'h1A: do_reg <=  {4'b1111,ELP, EMMC,EMCB,ERST};
+        default:
+            if(ai >= 8'h20)
+                do_reg <= {4'b1111,R[ai][3:0]};
+            else if (ai >= 8'h2f)
+                do_reg <= 8'hff;  
+            else
+                do_reg <= R[ai];
+    endcase
+
+    if((Xc[2:0] == 4) ) begin
         if(VINC ) begin
             // VERTICAL  DECODES
             even <= !even;
 
-            if(((RC == RASTER_WATCH) && ERST)) IRST <= 1;
+            //if(RC == 261) RC  <=0;// Resets vertical count to zero
             if(RC == 311) begin
                 RC <= 0; //PAL
                 VCBASE <=0;
                 g_access_enable <=0;
+                vic_enable <=0;
             end else begin
                 RC <= RC + 1;
                 RCs <= RCs + 1;
             end
-            //if(RC == 261) RC  <=0;// Resets vertical count to zero
-            if(RC == (17+312-32)) VSYNC  <= 1; if(RC == (20+312-32)) VSYNC  <= 0;
-            if(RC == (14+312-32)) VEQ    <= 1; if(RC == (23+312-32)) VEQ    <= 0;
-            if(RC == (13+312-32)) VBLANK <= 1; if(RC == (24+312-32)) VBLANK <= 0;
 
-            if(RC == 55) VSW24 <= 1; if(RC == 247) VSW24 <= 0;
-            if(RC == 51) VSW25 <= 1; if(RC == 251) VSW25 <= 0;
-            if(RC == 48) EEVMF <= 1; if(RC == 248) EEVMF <= 0;
-            //if(RC == 51) EEVMF <= 1; if(RC == 251) EEVMF <= 0;
-            if(RC == 1) vic_enable <= BLNK;
+            if(RC == (17+312-32-1)) VSYNC  <= 1; if(RC == (20+312-32-1)) VSYNC  <= 0;
+            if(RC == (14+312-32-1)) VEQ    <= 1; if(RC == (23+312-32-1)) VEQ    <= 0;
+            if(RC == (13+312-32-1)) VBLANK <= 1; if(RC == (24+312-32-1)) VBLANK <= 0;
+            if(RC == (55-1)) VSW24 <= 1; if(RC == (247-1)) VSW24 <= 0;
+            if(RC == (51-1)) VSW25 <= 1; if(RC == (251-1)) VSW25 <= 0;
+            if(RC == (48-1)) EEVMF <= 1; if(RC == (248-1)) EEVMF <= 0;
+
         end
     end
 
-    //PAL version only has 63 cycles pr line
-    if(Xc == 503) begin
-        Xc <=0;
-    end else
-        Xc <= Xc + 1;
+    //At the start of a line
+    if(Xc == 0) begin
+        if((RC == RASTER_WATCH)) IRST <= 1;
 
-    if(BOL) begin
         VMLI <= 0;
 
         if(EEVMF & (RC[2:0] == Y[2:0]))
             VCBASE <= VC;
         else
             VC <= VCBASE;
+
     end
+    if(RC == (48)) vic_enable <= DEN;        
+
+    //End of line
+    //PAL version only has 63 cycles pr line
+    if(Xc == 503) begin
+        Xc <=0;
+    end else
+        Xc <= Xc + 1;
+
 
     //d access
     if( d_access ) begin
@@ -419,6 +442,9 @@ begin
         3: pixel[0] <= c_data[11:8];
     endcase
 
+    //Set the foreground flag
+    pixel[0][4] <= g_data[7];
+
     //delay line used for scrolling
     pixel[1] <= pixel[0];
     pixel[2] <= pixel[1];
@@ -428,17 +454,37 @@ begin
     pixel[6] <= pixel[5];
     pixel[7] <= pixel[6];
 
-    // Sprite collision
-    if(EMMC && (sp_MMC & (sp_MMC - 1) != 0)) IMMC <= 1;
-    if(EMCB && fg_enable && (sp_MCB != 0)) IMCB<= 1;
+    // A collision of sprites among themselves is detected as soon as two or more
+    // sprite data sequencers output a non-transparent pixel in the course of
+    // display generation (this can also happen somewhere outside of the visible
+    // screen area). In this case, the MxM bits of all affected sprites are set in
+    // register $d01e and (if allowed, see section 3.12.), an interrupt is
+    // generated. The bits remain set until the register is read by the processor
+    // and are cleared automatically by the read access.
+    if((sp_pixel_enable & (sp_pixel_enable - 1) != 0)) begin
+        IMMC <= 1;
+        R[8'h1e] <= sp_pixel_enable;
+    end
 
+
+    // A collision of sprites and other graphics data is detected as soon as one
+    // or more sprite data sequencers output a non-transparent pixel and the
+    // graphics data sequencer outputs a foreground pixel in the course of display
+    // generation. In this case, the MxD bits of the affected sprites are set in
+    // register $d01f and (if allowed, see section 3.12.), an interrupt is
+    // generated. As with the sprite-sprite collision, the bits remain set until
+    // the register is read by the processor.
+    if(fg_enable && (0!=sp_pixel_enable)) begin
+        IMCB<= 1;
+        R[8'h1f] <= sp_pixel_enable;
+    end
 end
 
 
 // 8 sprite instances
 generate for(n=0; n < 8; n=n+1) begin : sprites
         vicii_sprite #(.number(n)) sprite(
-                         .clk(pixel_clock),
+                         .clk(dot_clk),
                          .reset(reset || !ME[n]),
                          .di(di[7:0]),
                          //.di(8'haa),
@@ -473,7 +519,7 @@ wire[3:0] final_pixel =
     sp_pixel_enable[5] && (!MDP[5] >= fg_enable) ? sp_pixel[5] :
     sp_pixel_enable[6] && (!MDP[6] >= fg_enable) ? sp_pixel[6] :
     sp_pixel_enable[7] && (!MDP[7] >= fg_enable) ? sp_pixel[7] :
-    pixel[X];
+    current_pixel;
 
 //sync signal
 wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
@@ -531,7 +577,7 @@ initial begin
     color_table[15] =  24'h959595; //light gray
 end
 
-always @(posedge pixel_clock ) begin
+always @(posedge dot_clk ) begin
     if(VINC & (RC == 0) & (Xc[2:0]) == 0) begin
         $fclose(f);
         $sformat(filename, "file%0d.ppm", frame);

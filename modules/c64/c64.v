@@ -172,7 +172,7 @@ vicii vicii_e (
            .color_out(color),
            .sync_lumen(luma),
            .aec(vic_aec),
-           .pixel_clock(dot_clk),
+           .dot_clk(dot_clk),
            .color_clock(color_carrier),
            .phi0(clk),
            .reset(reset)
@@ -299,6 +299,7 @@ mos6526 cia2 (
         );
 
 sid sid_e (
+        .dot_clk(dot_clk),
         .clk(clk),
         .reset(reset),
         .cs(sid_cs),
@@ -342,7 +343,7 @@ wire[7:0] colorram_do_cpu = vic_aec ? {4'b0,colorram_do} : 8'h00;
 wire[7:0] romh_do = (ROMH & !DMA) ? Di : 8'h00;
 wire[7:0] roml_do = (ROML & !DMA) ? Di : 8'h00;
 wire[7:0] vic_do_mask = vic_aec ? vic_do : 8'b0;
-assign bus_do = reset ? 0 : ( ram_do | kernal_do | basic_do | charrom_do | vic_do_mask | cia1_do| cia2_do | colorram_do_cpu | romh_do | roml_do ) ;
+assign bus_do = reset ? 0 : ( ram_do | kernal_do | basic_do | charrom_do | vic_do_mask | cia1_do| cia2_do | sid_do  | colorram_do_cpu | romh_do | roml_do ) ;
 always @(posedge clk)
 begin
     if(vic_cs || cia1_cs || cia2_cs)

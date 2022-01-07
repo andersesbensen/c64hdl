@@ -37,6 +37,29 @@ def send_cmd(cmd):
         write_reg(198,1 )
         read_reg(198)
 
+def do_gui():
+    import pygame, time
+    import pygame.locals as loc
+
+    pygame.init()
+    screen = pygame.display.set_mode((640, 480))
+    pygame.display.set_caption('Pygame Keyboard Test')
+    #pygame.mouse.set_visible(0)
+    
+    running = True;
+    while running:
+        for event in pygame.event.get():
+            if (event.type == loc.KEYUP):
+                print("key released %x\n" % event.scancode )
+            
+            elif (event.type == loc.KEYDOWN):
+
+                print("key pressed %x \n" % event.scancode)
+            elif(event.type == pygame.QUIT):
+                running = False
+        time.sleep(0.1)
+    
+    pygame.quit()
 
 parser = argparse.ArgumentParser(description='Read or wirte C64 bus.')
 parser.add_argument('-read',help="read a number of bytes(in hex)")
@@ -47,9 +70,14 @@ parser.add_argument('-write', help="Write a hex sequence")
 parser.add_argument('-offset', help='offset in hex', default="00")
 parser.add_argument('-serial', help="Serial device to use",default='/dev/ttyUSB1')
 parser.add_argument('-cmd', help="Inject a line into the BASIC keyboard buffer followed by RETURN.")
+parser.add_argument('-gui',action="store_true", help="show gui for keyboard and joystick input")
 
 
 args = parser.parse_args()
+
+if(args.gui):
+    do_gui()
+
 
 ser = serial.Serial(args.serial, baudrate=115200,timeout=0.02)  # open serial port
 
@@ -106,5 +134,6 @@ if (args.snd):
     write_reg(0xd404+osc,0x41)
     time.sleep(2)
     write_reg(0xd404+osc,0x40)
+
 
 ser.close()             # close portf

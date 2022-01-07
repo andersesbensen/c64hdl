@@ -1,16 +1,18 @@
 
 module sid (
+           input dot_clk,
            input clk,
            input reset,
            input cs,
            input rw,
            input [4:0]  a,
            input [7:0] di,
-           output reg [7:0] do,
+           output [7:0] do,
 
            output reg [11:0] audio
        );
 integer i;
+reg [7:0] do_reg;
 reg[7:0] r[31:0];
 
 wire[11:0] wave1;
@@ -43,6 +45,8 @@ wire low_pass  = r[24][4];
 wire band_pass = r[24][5];
 wire high_pass = r[24][6];
 wire mute3     = r[24][7];
+
+assign do = cs ? do_reg : 0;
 
 sid_filter flt_e (
                .clk(clk),
@@ -116,21 +120,21 @@ sid_env envelope3 (
             .out(env3)
         );
 
+always @(negedge clk ) begin
+    if(cs && !rw && !reset)
+        do_reg <= r[a];
+    else 
+        do_reg<= 0;
+end
+
 always @(posedge clk ) begin
     if(reset) begin
         for(i =0; i < 32; i=i+1) r[i]<=0;
-        do <= 0;
     end
-
 
     if(rw && cs) begin
         r[a] <= di;
-        do <= 0;
     end
-    else if(cs)
-        do <= r[a];
-    else
-        do <=0;
 
     wave1_env <= wave1 * env1;
     wave2_env <= wave2 * env2;

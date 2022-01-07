@@ -225,13 +225,13 @@ hex7segment u_hex7segment(
                 .segment_number( {4'b0,audio[11:0],Ao[15:0]} )
             );
 
-
-
 clock_clk_wiz_0_0_clk_wiz clock_i
       (.clk_in1(clk_i),
        .clk_color(color_clk),
        .locked(lock),
        .reset(1'b0));
+
+
 
 uart_rx uart_rx_i (
             .i_Clock(dot_clk),

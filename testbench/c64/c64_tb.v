@@ -1,4 +1,4 @@
-`timescale 1ns / 1ns
+//`timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
 // Company:
 // Engineer:
@@ -74,7 +74,7 @@ c64 c64_e(
         .phi2(phi2),
 
         .GAME_n(1'b1),
-        .EXTROM_n(1'b1),
+        .EXTROM_n(1'b0),
         .serial_data_i(1'b0),
         .serial_clock_i(1'b0),
 
@@ -84,7 +84,7 @@ c64 c64_e(
 
 
 /* 8kb cartrige */
-rom #("diag.mif",13,8192) carrtrige_rom(
+rom #("vic_test.mif",13,8192) carrtrige_rom(
         .clk(clk),
         .a(  Ao[12:0] ),
         .do( rom_data ),

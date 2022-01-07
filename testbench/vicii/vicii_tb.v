@@ -51,7 +51,7 @@ vicii my_vic
        (
            .aec( aec ),
            .reset ( !rst_n ),
-           .pixel_clock (clk),
+           .dot_clk (clk),
            .color_clock(clk),
            .phi0(phi0),
            .ao( vic_aout ),
@@ -88,8 +88,9 @@ initial begin
 
     test_regs[12'h18] = 8'h04;
     test_regs[12'h12] = 8'h0e;  //Raster watch
-    test_regs[12'h11] = 8'h98;
+    test_regs[12'h11] = 8'h18;
     test_regs[12'h16] = 8'hc8;
+    test_regs[12'h20] = 8'h0c; // Edge color
 
     test_regs[12'h1A] = 8'h01; //Enable raster watch
 
