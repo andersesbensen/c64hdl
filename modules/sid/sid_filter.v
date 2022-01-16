@@ -2,7 +2,7 @@ module sid_filter (
            input clk,
            input reset,
            input[3:0] resonance,
-           input[11:0] fc,
+           input[10:0] fc,
            input [11:0] in,
            input high_pass,
            input low_pass,
@@ -50,7 +50,7 @@ always @(posedge clk ) begin
     // Set limit w0 to keep filter stable, see resid source for details
     // w0max =2*np.pi*16000*1.048576
     // fcmax = int((w0max - 797) /40)
-    w0  <= fc < 12'ha37 ? fc*40 + 797 : 105397;
+    w0  <= fc*41 + 797;
 
     out <= (high_pass ? ((Vhp)+1024) : 0 +
             low_pass  ? ((Vlp)+1024) : 0 +

@@ -1,4 +1,5 @@
 
+from concurrent.futures import thread
 from os import SCHED_OTHER, read
 from time import sleep
 import serial
@@ -6,18 +7,26 @@ import sys
 import argparse
 import time
     
+cnt = 0
+def reset():
+    global ser
+    ser.write([0x4])
 
 def write_reg(addr,data):
     global ser
-    ser.write([0x2,(addr >> 8) & 0xff, (addr )& 0xff,data])
-    return
-    b = ser.read(1)
+    global cnt
 
-    if(b):
-        if(6 != b[0]):
-            print( "%04x : %02x : %c" % (addr,b[0],b[0] ) )
-    else:
-        print("No response")
+    ser.write([0x2,(addr >> 8) & 0xff, (addr )& 0xff,data])
+    cnt = cnt + 1
+
+    if(cnt > 20):
+        b = ser.read(20)
+        cnt = 0
+        if(b):
+            if(6 != b[0]):
+                print( "%04x : %02x : %c" % (addr,b[0],b[0] ) )
+        else:
+            print("No response")
 
 def read_reg(a):
     global ser
@@ -36,6 +45,16 @@ def send_cmd(cmd):
         write_reg(631,ord(c) )
         write_reg(198,1 )
         read_reg(198)
+
+def load_prg(file):
+    f = open(file,"rb")
+    d = f.read()
+    f.close()
+    offset = d[1]<< 8 | d[0]
+    for i in range(len(d)-2):
+        write_reg( offset +i ,d[2+i])
+        if(i & 0xf == 0):
+            print("%04x: write  " % (offset + i))
 
 def do_gui():
     import pygame, time
@@ -64,7 +83,10 @@ def do_gui():
 parser = argparse.ArgumentParser(description='Read or wirte C64 bus.')
 parser.add_argument('-read',help="read a number of bytes(in hex)")
 parser.add_argument('-prg', help="upload PRG file")
+parser.add_argument('-test', help="RUN vice test case")
+
 parser.add_argument('-snd',action="store_true", help="play sound")
+parser.add_argument('-reset',action="store_true", help="Reset chip")
 
 parser.add_argument('-write', help="Write a hex sequence")
 parser.add_argument('-offset', help='offset in hex', default="00")
@@ -83,16 +105,31 @@ ser = serial.Serial(args.serial, baudrate=115200,timeout=0.02)  # open serial po
 
 offset = int(args.offset,16)
 
-if(args.prg):
-    f = open(args.prg,"rb")
-    d = f.read()
-    f.close()
-    offset = d[1]<< 8 | d[0]
-    for i in range(len(d)-2):
-        write_reg( offset +i ,d[2+i])
-        if(i & 0xf == 0):
-            print("%04x: write  " % (offset + i))
+if(args.reset):
+    reset()
 
+if(args.prg):
+    load_prg(args.prg)
+
+if(args.test):
+    write_reg(0xD7ff,0xaa)
+
+    load_prg(args.test)
+    send_cmd("RUN")
+    send_cmd("\r")
+    ser.flush()
+    sleep(2)
+    ser.read(1000) # empty RX buffer
+
+    rc = read_reg(0xD7ff)
+    rc = read_reg(0xD7ff)
+    
+    if(rc == 0x00):
+        print("SUCSESS")
+    elif(rc == 0xFF):
+        print("FAIL")
+    else:
+        print("INCONCLUSIVE (%x)" % rc)
 
 if( args.read ):
     length = int(args.read,16)
@@ -118,22 +155,32 @@ if (args.snd):
     
     osc = 0*7
     write_reg(0xd400+osc,0x5)
-    write_reg(0xd401+osc,0x24)
+    write_reg(0xd401+osc,0x44)
     write_reg(0xd402+osc,0)
     write_reg(0xd403+osc,8)
     write_reg(0xd405+osc,0x4e)
-    write_reg(0xd406+osc,0x47)
+    write_reg(0xd406+osc,0x44)
 
+    osc = 2*7
+    write_reg(0xd400+osc,0x5)
+    write_reg(0xd401+osc,0x1)
+    write_reg(0xd402+osc,0)
+    write_reg(0xd403+osc,8)
+    write_reg(0xd405+osc,0x4e)
+    write_reg(0xd406+osc,0x4a)
 
 
     write_reg(0xd415,0x01)
-    write_reg(0xd416,0x2f)
-    write_reg(0xd417,0x10) #filter route
-    write_reg(0xd418,0x2f) #Volume and low pass 
+    write_reg(0xd416,0x0f)
+    write_reg(0xd417,0x91) #filter route
+    write_reg(0xd418,0x9f) #Volume and low pass 
     #write_reg(0xd419,0xf)
-    write_reg(0xd404+osc,0x41)
+    write_reg(0xd404+2*7,0x01)
+    write_reg(0xd404+0*7,0x13)
+
     time.sleep(2)
-    write_reg(0xd404+osc,0x40)
+    write_reg(0xd404+2*7,0x00)
+    write_reg(0xd404+0*7,0x12)
 
 
 ser.close()             # close portf

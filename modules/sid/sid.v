@@ -7,12 +7,11 @@ module sid (
            input rw,
            input [4:0]  a,
            input [7:0] di,
-           output [7:0] do,
+           output reg [7:0] do,
 
            output reg [11:0] audio
        );
 integer i;
-reg [7:0] do_reg;
 reg[7:0] r[31:0];
 
 wire[11:0] wave1;
@@ -33,7 +32,8 @@ reg[19:0] wave3_env;
 reg[21:0] flt_in;
 reg[21:0] audio_output;
 
-wire[11:0]  flt_fc = {r[22][7:0],r[21][3:0]};
+wire[10:0]  flt_fc = {r[22][7:0],r[21][2:0]};
+wire flt_ex = r[21][3];
 wire       flt1 = r[23][0];
 wire       flt2 = r[23][1];
 wire       flt3 = r[23][2];
@@ -45,8 +45,6 @@ wire low_pass  = r[24][4];
 wire band_pass = r[24][5];
 wire high_pass = r[24][6];
 wire mute3     = r[24][7];
-
-assign do = cs ? do_reg : 0;
 
 sid_filter flt_e (
                .clk(clk),
@@ -120,11 +118,9 @@ sid_env envelope3 (
             .out(env3)
         );
 
-always @(negedge clk ) begin
-    if(cs && !rw && !reset)
-        do_reg <= r[a];
-    else 
-        do_reg<= 0;
+//Read registers
+always @(posedge dot_clk ) begin
+        do <= (cs && !rw) ? r[a] : 0;
 end
 
 always @(posedge clk ) begin
@@ -132,10 +128,9 @@ always @(posedge clk ) begin
         for(i =0; i < 32; i=i+1) r[i]<=0;
     end
 
-    if(rw && cs) begin
-        r[a] <= di;
-    end
-
+    if(cs && rw && (a < 8'h19) ) r[a] <= di;
+    
+        
     wave1_env <= wave1 * env1;
     wave2_env <= wave2 * env2;
     wave3_env <= wave3 * env3;
@@ -152,5 +147,9 @@ always @(posedge clk ) begin
                      (flt3 || mute3 ? 0 :  wave3_env ) +
                      (flt_out<<8)  ) ;
     audio <=  (vol * audio_output[21:14]);
+
+    r[8'h1b] <= wave3[11:3];
+    r[8'h1c] <= env3;
+
 end
 endmodule

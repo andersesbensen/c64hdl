@@ -14,7 +14,7 @@ module mos6526 (
 
            input  wire [3:0] rs,
            input  wire [7:0] db_in,
-           output [7:0] db_out,
+           output reg [7:0] db_out,
 
            input  wire [7:0] pa_in,
            output [7:0] pa_out,
@@ -101,31 +101,29 @@ wire timerBoverflow = !newTimerBVal & countB2;
 wire       rd =  !cs_n & !rw;
 wire       wr =  !cs_n & rw;
 
-reg  [7:0] db_out_reg;
-assign db_out = cs_n ? 0 : db_out_reg;
 
 // Register Decoding
 always @(posedge dot_clk) begin
-    if (!res_n) db_out_reg <= 8'h00;
-    else if (rd & clk)
+    if (rd && clk && ! cs_n)
     case (rs)
-        4'h0: db_out_reg <= pa_in;
-        4'h1: db_out_reg <= pb_in;
-        4'h2: db_out_reg <= ddra;
-        4'h3: db_out_reg <= ddrb;
-        4'h4: db_out_reg <= timer_a[ 7:0];
-        4'h5: db_out_reg <= timer_a[15:8];
-        4'h6: db_out_reg <= timer_b[ 7:0];
-        4'h7: db_out_reg <= timer_b[15:8];
-        4'h8: db_out_reg <= {4'h0, tod_latch[3:0]};
-        4'h9: db_out_reg <= {1'b0, tod_latch[10:4]};
-        4'ha: db_out_reg <= {1'b0, tod_latch[17:11]};
-        4'hb: db_out_reg <= {tod_latch[23], 2'h0, tod_latch[22:18]};
-        4'hc: db_out_reg <= sdr;
-        4'hd: db_out_reg <= {~irq_n, 2'b00, icr};
-        4'he: db_out_reg <= {cra[7:5], 1'b0, cra[3:0]};
-        4'hf: db_out_reg <= {crb[7:5], 1'b0, crb[3:0]};
-    endcase
+        4'h0: db_out <= pa_in;
+        4'h1: db_out <= pb_in;
+        4'h2: db_out <= ddra;
+        4'h3: db_out <= ddrb;
+        4'h4: db_out <= timer_a[ 7:0];
+        4'h5: db_out <= timer_a[15:8];
+        4'h6: db_out <= timer_b[ 7:0];
+        4'h7: db_out <= timer_b[15:8];
+        4'h8: db_out <= {4'h0, tod_latch[3:0]};
+        4'h9: db_out <= {1'b0, tod_latch[10:4]};
+        4'ha: db_out <= {1'b0, tod_latch[17:11]};
+        4'hb: db_out <= {tod_latch[23], 2'h0, tod_latch[22:18]};
+        4'hc: db_out <= sdr;
+        4'hd: db_out <= {~irq_n, 2'b00, icr};
+        4'he: db_out <= {cra[7:5], 1'b0, cra[3:0]};
+        4'hf: db_out <= {crb[7:5], 1'b0, crb[3:0]};
+    endcase else
+        db_out <=0;
 end
 assign  pa_out = pra | ~ddra;
 // Port A Output

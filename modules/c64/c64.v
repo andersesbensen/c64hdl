@@ -228,6 +228,7 @@ pla pla_e(
      );
 
 ram ram_e(
+        .reset(reset),
         .clk(dot_clk),
         .a(bus_address),
         .di(bus_di),
@@ -238,6 +239,7 @@ ram ram_e(
 
 wire debug1 =(colorram_cs | !vic_aec) & (bus_di[3:0] == 0) & GR_W;
 ram #(10,4) color_ram(
+        .reset(reset),
         .clk(dot_clk),
         .a(bus_address[9:0]),
         .di(bus_di[3:0]),

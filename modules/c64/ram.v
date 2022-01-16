@@ -9,7 +9,7 @@ module ram
        (
            input clk,
            input enable,
-
+           input reset,
            input we,
 
            input [ADDR_WIDTH-1:0] a,
@@ -19,6 +19,7 @@ module ram
 localparam  RAM_DEPTH = 1 << ADDR_WIDTH;
 reg[DATA_WIDTH-1:0] mem  [RAM_DEPTH-1:0];
 integer i;
+
 wire wr = enable & we;
 
 initial begin

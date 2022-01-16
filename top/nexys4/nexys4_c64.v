@@ -302,6 +302,8 @@ always @(posedge phi2 ) begin
 end
 
 assign Di = DMA ? debug_do_l : cart_data;
+wire[4:0] joyA =  sw_i[15] ?  5'b11111 : { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i };
+wire[4:0] joyB = !sw_i[15] ?  5'b11111 : { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i };
 
 c64 c64_e(
         .color_carrier(color_clk),
@@ -340,8 +342,8 @@ c64 c64_e(
       
         //Joystick
         //         f         r     l        d        u
-        .joy_a( { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i } ),
-        .joy_b(  5'b11111),
+        .joy_a( joyA ),
+        .joy_b( joyB ),
         .BA(BA),
         .Do(Do),
         .IO1(),

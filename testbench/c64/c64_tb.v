@@ -74,7 +74,8 @@ c64 c64_e(
         .phi2(phi2),
 
         .GAME_n(1'b1),
-        .EXTROM_n(1'b0),
+        //.EXTROM_n(1'b0),
+        .EXTROM_n(1'b1),
         .serial_data_i(1'b0),
         .serial_clock_i(1'b0),
 

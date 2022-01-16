@@ -58,11 +58,12 @@ always @(posedge clk ) begin
 
     // No operation if test bit is set.shift_period
     if(!test_c) begin
-        phase     <= (sync_c && sync_in) ? 0 : phase + fcw;
-        old_msb   <= phase[23];
+        old_msb   <= sync_in;
         old_bit19 <= phase[19];
-        sync_out  <= phase[23] ^ old_msb;
+        sync_out  <= phase[23];
 
+        phase   <= (sync_c && (sync_in ^ old_msb)) ? 0 : phase + fcw;
+        
         if(old_bit19 ^ phase[19]) begin
             // Noise:
             // The noise output is taken from intermediate bits of a 23-bit shift register

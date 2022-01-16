@@ -258,10 +258,9 @@ begin
         g_access_enable <=0;
     end
 
-    if(we && cs && aec && (Xc[2:0] == 3))
+    if(we && cs && aec && (Xc[2:0] == 4))
     begin
         $display("vic write %h %h",ai,di);
-        do_reg <= 0;
         case (ai)
             /*
                 When an interrupts occurs, the
@@ -285,7 +284,7 @@ begin
     end 
 
     //Read registers   
-    if(!we && cs && aec && (Xc[2:0] == 4))
+    if(!we && cs && aec )
     case (ai)
         8'h11: do_reg <=  { RC[8], R[ai][6:0] };
         8'h12: do_reg <=  RC[7:0];
@@ -300,6 +299,8 @@ begin
             else
                 do_reg <= R[ai];
     endcase
+    else 
+        do_reg <= 0;
 
     if((Xc[2:0] == 4) ) begin
         if(VINC ) begin
