@@ -48,6 +48,14 @@ reg start_load;
 wire BA;
 wire ROMH;
 wire ROML;
+
+wire serial_clock_i;
+wire serial_data_i;
+wire serial_clock_o;
+wire serial_data_o;
+wire serial_atn_o;
+
+
 c64 c64_e(
         .color_carrier(),
         .dot_clk(clk),
@@ -74,18 +82,38 @@ c64 c64_e(
         .phi2(phi2),
 
         .GAME_n(1'b1),
-        //.EXTROM_n(1'b0),
-        .EXTROM_n(1'b1),
-        .serial_data_i(1'b0),
-        .serial_clock_i(1'b0),
+        .EXTROM_n(1'b0),
+        //.EXTROM_n(1'b1),
+
+        //IEC Serial port
+        .serial_clock_i(serial_clock_i),
+        .serial_data_i(serial_data_i),
+        .serial_data_o(serial_data_o),
+        .serial_clock_o(serial_clock_o),
+        .serial_atn(serial_atn),
 
         .joy_a( 5'b11111),
         .joy_b( 5'b11111)
     );
 
+iec iec_e (
+    .reset(!reset),
+    .clk(phi2),
+    .atn(serial_atn),
+    .clock_i(serial_clock_o),
+    .clock_o(serial_clock_i),
+    .data_o(serial_data_i),
+    .data_i(serial_data_o)
+
+    /*.rx_byte(iec_tx_byte),
+    .rx_ready(iec_tx_byte_valid),
+    .tx_byte(iec_rx_byte),
+    .tx_ready(iec_rx_byte_valid)*/
+);
+
 
 /* 8kb cartrige */
-rom #("vic_test.mif",13,8192) carrtrige_rom(
+rom #("cartrige.mif",13,8192) carrtrige_rom(
         .clk(clk),
         .a(  Ao[12:0] ),
         .do( rom_data ),
@@ -98,7 +126,7 @@ integer i;
 
 initial begin
     $dumpfile("c64.vcd");
-    $dumpvars(0, c64_e);
+    $dumpvars(0, c64_tb);
 
     //cmd = "LOAD \"$\",8";
     start_load = 0;

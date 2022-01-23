@@ -62,21 +62,22 @@ changes really fast). The left most 4 digits indicates the sound waveform.
   connecotr the tv composite input.
 
   As an expeirment the video output is also tranmitted as a RF signal on the
-  blue pin of the VGA connector. The signal is tranmitted at 62Mhz corresponding
-  to VHF channel C4. On my setup I just plug in a jump wire into VGA connector
-  then my TV is able to pickup the signal.
+  blue pin of the VGA connector. The signal is tranmitted at 55Mhz corresponding
+  to VHF channel C3. On my setup I just plug in a jump wire into VGA connector
+  then my TV is able to pickup the signal. Audio is transmitted on the green 
+  pin of the VGA connector.
 
-> **WARNING**: Tranmitting TV signal on VHF C4 is most likely a violation of RF
+> **WARNING**: Tranmitting TV signal on VHF C3 is most likely a violation of RF
 > regulatory requirements in your country. (How ever the power will not be very
 > high). Also I did not implement propper SSB modulation so the signal has a
 > mirror down in channel C3 so it actually occupies a bandwith of 10Mhz. 
 
-- Audio is output on the Nexsys minijack connector. (One day it will also be
-  output on the RF signal).
+- Audio is also output on the Nexsys minijack connector.
 
 - A keyboard can be connected to the Nexys4 usb port.
 
-- They 5 navigation buttons controls the joystick A port.
+- They 5 navigation buttons controls the joystick A or B port, swith 15 switches 
+between port A and B.
 
 - All switches should be on up position(towards the 7 segment digits). SW0 and
   SW1 controls the EXTROM and GAME c64 pins of the C64. Switching SW1 down will
@@ -117,3 +118,9 @@ optional arguments:
   -serial SERIAL  Serial device to use
   -cmd CMD        Inject a line into the BASIC keyboard buffer followed by RETURN.
 ```
+
+# Known issues
+
+- RF modulation does not use SSB modulation, and occupies ca 12mhz bandwith as opposed to a 6 mhz BW. 
+- Sprites can have artifacts when they reach the right side of the border.
+- A lot of games crashes, there are propably lots of reasons for this.

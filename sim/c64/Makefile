@@ -13,11 +13,14 @@ local: sim_pre_cmd simulation sim_post_cmd
 VERILOG_SRC := ../../modules/c64/c64.v \
 ../../modules/c64/pla.v \
 ../../modules/c64/ram.v \
+../../modules/c64/ramr.v \
 ../../modules/c64/rom.v \
 ../../modules/cia/cia.v \
 ../../modules/cpu/ALU.v \
 ../../modules/cpu/cpu.v \
 ../../modules/cpu/mos6510.v \
+../../modules/misc/iec.v \
+../../modules/rf_modulator/rf_modulator.v \
 ../../modules/sid/sid.v \
 ../../modules/sid/sid_env.v \
 ../../modules/sid/sid_filter.v \
@@ -30,11 +33,14 @@ VERILOG_SRC := ../../modules/c64/c64.v \
 VERILOG_OBJ := work/c64/.c64_v \
 work/pla/.pla_v \
 work/ram/.ram_v \
+work/ramr/.ramr_v \
 work/rom/.rom_v \
 work/cia/.cia_v \
 work/ALU/.ALU_v \
 work/cpu/.cpu_v \
 work/mos6510/.mos6510_v \
+work/iec/.iec_v \
+work/rf_modulator/.rf_modulator_v \
 work/sid/.sid_v \
 work/sid_env/.sid_env_v \
 work/sid_filter/.sid_filter_v \
@@ -56,10 +62,11 @@ include_dirs:
 
 work/c64/.c64_v: ../../modules/c64/c64.v \
 work/pla/.pla_v \
-work/ram/.ram_v \
+work/ramr/.ramr_v \
 work/rom/.rom_v \
 work/cia/.cia_v \
 work/mos6510/.mos6510_v \
+work/rf_modulator/.rf_modulator_v \
 work/sid/.sid_v \
 work/vicii/.vicii_v
 		echo $< >> run.command
@@ -72,6 +79,12 @@ work/pla/.pla_v: ../../modules/c64/pla.v
 
 
 work/ram/.ram_v: ../../modules/c64/ram.v
+		echo $< >> run.command
+		@mkdir -p $(dir $@) && touch $@
+
+
+work/ramr/.ramr_v: ../../modules/c64/ramr.v \
+work/ram/.ram_v
 		echo $< >> run.command
 		@mkdir -p $(dir $@) && touch $@
 
@@ -99,6 +112,16 @@ work/ALU/.ALU_v
 
 work/mos6510/.mos6510_v: ../../modules/cpu/mos6510.v \
 work/cpu/.cpu_v
+		echo $< >> run.command
+		@mkdir -p $(dir $@) && touch $@
+
+
+work/iec/.iec_v: ../../modules/misc/iec.v
+		echo $< >> run.command
+		@mkdir -p $(dir $@) && touch $@
+
+
+work/rf_modulator/.rf_modulator_v: ../../modules/rf_modulator/rf_modulator.v
 		echo $< >> run.command
 		@mkdir -p $(dir $@) && touch $@
 
@@ -145,7 +168,8 @@ work/vicii_sprite/.vicii_sprite_v: ../../modules/vicii/vicii_sprite.v
 
 work/c64_tb/.c64_tb_v: ../../testbench/c64/c64_tb.v \
 work/c64/.c64_v \
-work/rom/.rom_v
+work/rom/.rom_v \
+work/iec/.iec_v
 		echo $< >> run.command
 		@mkdir -p $(dir $@) && touch $@
 

@@ -23,8 +23,17 @@ module c64(
            input color_carrier,
            input dot_clk,
            input reset,
+           
+           //Composite video and audio
+           //This does not exist on a real C64
            output[5:0] composite,
            output[11:0] audio,
+
+           // RF modulator output this has been split up in a
+           // Video and an audio part, such that two separate 
+           // 4 bit dac can be used.
+           output[3:0] rf_video,
+           output[3:0] rf_audio,
 
            //Keyboard connector
            input[7:0] keyboard_COL,
@@ -144,7 +153,6 @@ wire[5:0] luma;
 wire GR_W;
 assign cass_motor = cpu_p[5];
 assign cass_wrt = cpu_p[3];
-assign composite = color ? luma + 16 : luma;
 
 //Fake a 50 hz clock
 reg tod;
@@ -158,6 +166,16 @@ always @(posedge clk ) begin
         tod <=!tod;
     end
 end
+
+rf_modulator rf_modulator_e(
+    .clk_142mhz(color_carrier), // Color carrier * 32 ie 141.8758
+    .luma(luma),
+    .color(color),
+    .audio(audio),
+    .rf_video(rf_video), //Video RF at 55Mhz VHF channel 3
+    .rf_audio(rf_audio), //Audio RF at 60.5Mhz VHF channel 3
+    .composite(composite) //Composite video
+);
 
 vicii vicii_e (
            .do(vic_do),
@@ -227,7 +245,7 @@ pla pla_e(
          .IO2(IO2)
      );
 
-ram ram_e(
+ramr ram_e(
         .reset(reset),
         .clk(dot_clk),
         .a(bus_address),
@@ -238,7 +256,7 @@ ram ram_e(
     );
 
 wire debug1 =(colorram_cs | !vic_aec) & (bus_di[3:0] == 0) & GR_W;
-ram #(10,4) color_ram(
+ramr #(10,4) color_ram(
         .reset(reset),
         .clk(dot_clk),
         .a(bus_address[9:0]),

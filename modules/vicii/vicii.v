@@ -328,7 +328,7 @@ begin
         end
     end
 
-    //At the start of a line
+    //At the start of a line, just after VINC
     if(Xc == 0) begin
         if((RC == RASTER_WATCH)) IRST <= 1;
 

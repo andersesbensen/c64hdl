@@ -94,9 +94,9 @@ initial begin
 
     test_regs[12'h1A] = 8'h01; //Enable raster watch
 
-    test_regs[12'h00] = 8'h20; //Sprite X
-    test_regs[12'h01] = 8'h20; //Sprite Y
-    test_regs[12'h02] = 8'h40; //Sprite X
+    test_regs[12'h00] = 8'h28; //Sprite X
+    test_regs[12'h01] = 8'h30; //Sprite Y
+    test_regs[12'h02] = 8'h2e; //Sprite X
     test_regs[12'h03] = 8'h40; //Sprite Y
     test_regs[12'h04] = 8'h60; //Sprite X
     test_regs[12'h05] = 8'h60; //Sprite Y
@@ -111,7 +111,7 @@ initial begin
     test_regs[12'h0e] = 8'h20; //Sprite X
     test_regs[12'h0f] = 8'he0; //Sprite Y
 
-    test_regs[12'h10] = 8'h00; //Sprite X MSB
+    test_regs[12'h10] = 8'hff; //Sprite X MSB
     
     
     test_regs[12'h15] = 8'hff; //Sprite enable
@@ -120,7 +120,7 @@ initial begin
     test_regs[12'h1C] = 8'h00; //Multi color sprite
     test_regs[12'h1D] = 8'h00; //Expand X
     
-    test_regs[12'h27] = 8'h01; //MIB Color
+    test_regs[12'h27] = 8'h03; //MIB Color
     test_regs[12'h28] = 8'h09; //MIB Color
     test_regs[12'h29] = 8'h03; //MIB Color
     test_regs[12'h2a] = 8'h04; //MIB Color

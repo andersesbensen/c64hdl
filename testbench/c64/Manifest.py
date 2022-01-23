@@ -4,6 +4,6 @@ files = [
 ]
 
 modules = {
-    "local" : [ "../../modules/c64" ],
+    "local" : [ "../../modules/c64","../../modules/misc" ],
 
 }

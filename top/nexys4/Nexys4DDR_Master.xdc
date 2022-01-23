@@ -220,7 +220,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports btnd_i]
 ##Bank = 15, Pin name = IO_L16P_T2_A28_15,					Sch name = JA4
 #set_property PACKAGE_PIN E17 [get_ports {JA[3]}]
 #set_property IOSTANDARD LVCMOS33 [get_ports {JA[3]}]
-##Bank = 15, Pin name = IO_0_15,								Sch name = JA7
+##Bank = 15, Pin name = IO_0_15,						    Sch name = JA7
 #set_property PACKAGE_PIN G13 [get_ports {JA[4]}]
 #set_property IOSTANDARD LVCMOS33 [get_ports {JA[4]}]
 ##Bank = 15, Pin name = IO_L20N_T3_A19_15,					Sch name = JA8
@@ -233,6 +233,25 @@ set_property IOSTANDARD LVCMOS33 [get_ports btnd_i]
 #set_property PACKAGE_PIN E18 [get_ports {JA[7]}]
 #set_property IOSTANDARD LVCMOS33 [get_ports {JA[7]}]
 
+
+
+##Bank = 15, Pin name = IO_L16P_T2_A28_15,					Sch name = JA4
+set_property PACKAGE_PIN E17 [get_ports iec_clock_i]
+set_property IOSTANDARD LVCMOS33 [get_ports iec_clock_i]
+set_property PULLUP true [get_ports iec_clock_i]
+##Bank = 15, Pin name = IO_0_15,						    Sch name = JA7
+set_property PACKAGE_PIN G13 [get_ports iec_data_i]
+set_property IOSTANDARD LVCMOS33 [get_ports iec_data_i]
+set_property PULLUP true [get_ports iec_data_i]
+##Bank = 15, Pin name = IO_L20N_T3_A19_15,					Sch name = JA8
+set_property PACKAGE_PIN C17 [get_ports iec_clock_o]
+set_property IOSTANDARD LVCMOS33 [get_ports iec_clock_o]
+##Bank = 15, Pin name = IO_L21N_T3_A17_15,					Sch name = JA9
+set_property PACKAGE_PIN D18 [get_ports iec_data_o]
+set_property IOSTANDARD LVCMOS33 [get_ports iec_data_o]
+##Bank = 15, Pin name = IO_L21P_T3_DQS_15,					Sch name = JA10
+set_property PACKAGE_PIN E18 [get_ports iec_atn_o]
+set_property IOSTANDARD LVCMOS33 [get_ports iec_atn_o]
 
 
 ##Pmod Header JB
@@ -746,6 +765,7 @@ create_generated_clock -name phi -source [get_pins clock_gen_i/dot_clk] -divide_
 
 
 
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets pwm_sdaudio_o_OBUF]
 
 
 

@@ -1,5 +1,5 @@
 files = [
- "c64.v", "pla.v" , "ram.v","rom.v",
+ "c64.v", "pla.v" , "ram.v","ramr.v","rom.v",
 ]
 
 modules = {
@@ -8,6 +8,7 @@ modules = {
     "../../modules/cia" ,
     "../../modules/vicii" ,
     "../../modules/sid",     
+    "../../modules/rf_modulator",
     "../../assets"     
 
      ],
