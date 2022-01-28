@@ -134,6 +134,8 @@ reg[7:0] debug_do_l; //Latch Do when changing clock domain
 wire[7:0] cart_do;  
 
 wire debug_request;
+wire reset_request;
+
 assign DMA = debug_dma;
 
 wire color_clk;
@@ -181,6 +183,9 @@ assign debug_rx_byte_valid =  sw_i[14] ? uart_rx_byte_valid : 0;
 assign iec_rx_byte         = !sw_i[14] ? uart_rx_byte : 0;
 assign iec_rx_byte_valid   = !sw_i[14] ? uart_rx_byte_valid : 0;
 
+//Debug status register
+wire[7:0] debug_status;
+reg debug_status_reg_assigned;
 
 //Clock generation
 // color clock must be 141Mhz = 4.43mhz *32
@@ -195,7 +200,7 @@ hex7segment u_hex7segment(
                 .reset(reset),
                 .disp_seg(disp_seg),
                 .disp_an(disp_an),
-                .segment_number( {8'b0,iec_tx_byte,Ao[15:0]} )
+                .segment_number( {debug_status,iec_tx_byte,Ao[15:0]} )
             );
 
 clock_clk_wiz_0_0_clk_wiz clock_i
@@ -211,10 +216,17 @@ uart_rx uart_rx_i (
             .o_Rx_Byte(uart_rx_byte)
         );
 
+wire[7:0] actual_uart_tx_byte = uart_tx_byte_valid ? uart_tx_byte : debug_status;
+wire actual_uart_tx_byte_valid = debug_status_reg_assigned || uart_tx_byte_valid;
+
+always @(posedge phi2 ) begin
+    debug_status_reg_assigned <= (Ao == 16'hD7ff) ? 1 : 0;
+end
+
 uart_tx uart_tx_i (
             .i_Clock(dot_clk),
-            .i_Tx_DV(uart_tx_byte_valid),
-            .i_Tx_Byte( uart_tx_byte ),
+            .i_Tx_DV( actual_uart_tx_byte_valid ),
+            .i_Tx_Byte( actaul_uart_tx_byte ),
             .o_Tx_Serial(RsTx),
             .o_Tx_Active(),
             .o_Tx_Done()
@@ -256,12 +268,12 @@ iec iec_e (
 );
 */
 
-    assign serial_data_i = iec_data_i;
-    assign serial_clock_i = iec_clock_i;
-    assign iec_clock_o = serial_clock_o;
-    assign iec_data_o = serial_data_o;
-    assign iec_atn_o = serial_atn;
-    
+assign serial_data_i = iec_data_i;
+assign serial_clock_i = iec_clock_i;
+assign iec_clock_o = serial_clock_o;
+assign iec_data_o = serial_data_o;
+assign iec_atn_o = serial_atn;
+
     
 c64_debug c64_debug_i(
               .clk(dot_clk),
@@ -275,7 +287,8 @@ c64_debug c64_debug_i(
               .debug_addr(Ai),
               .debug_we(WE),
               .debug_request(debug_request),
-              .debug_ack(debug_ack)
+              .debug_ack(debug_ack),
+              .reset_request(reset_request)
           );
 
 always @(negedge phi2 ) begin
@@ -288,12 +301,13 @@ always @(posedge phi2 ) begin
         debug_dma <=0;
     else if(!BA)
         debug_dma <= debug_request;
-
+    
     if(debug_dma) begin
         debug_ack <= !BA;
-    end
+    end    
     else
         debug_ack <= 0;
+
 end
 
 assign Di = DMA ? debug_do_l : cart_data;
@@ -303,7 +317,7 @@ wire[4:0] joyB = !sw_i[15] ?  5'b11111 : { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !
 c64 c64_e(
         .color_carrier(color_clk),
         .dot_clk(dot_clk ),
-        .reset(reset ),
+        .reset(reset | reset_request ),
         .composite(composite),
         .rf_audio(vga_green_o),
         .rf_video(vga_blue_o),
@@ -344,7 +358,8 @@ c64 c64_e(
         .BA(BA),
         .Do(Do),
         .IO1(),
-        .IO2()
+        .IO2(),
+        .debug_status(debug_status)
     );
 
 /* PDM modulatio*/
