@@ -82,8 +82,8 @@ c64 c64_e(
         .phi2(phi2),
 
         .GAME_n(1'b1),
-        .EXTROM_n(1'b0),
-        //.EXTROM_n(1'b1),
+        //.EXTROM_n(1'b0),
+        .EXTROM_n(1'b1),
 
         //IEC Serial port
         .serial_clock_i(serial_clock_i),

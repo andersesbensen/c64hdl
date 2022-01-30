@@ -225,8 +225,8 @@ end
 
 uart_tx uart_tx_i (
             .i_Clock(dot_clk),
-            .i_Tx_DV( actual_uart_tx_byte_valid ),
-            .i_Tx_Byte( actaul_uart_tx_byte ),
+            .i_Tx_DV( uart_tx_byte_valid ),
+            .i_Tx_Byte( uart_tx_byte ),
             .o_Tx_Serial(RsTx),
             .o_Tx_Active(),
             .o_Tx_Done()
@@ -250,7 +250,7 @@ keyboard keyboard_i(
              .scan_in(kk_r),
              .scan_out(kk_c)
          );
-/*
+
 iec iec_e (
     .reset(reset),
 
@@ -266,14 +266,14 @@ iec iec_e (
     .tx_byte(iec_rx_byte),
     .tx_ready(iec_rx_byte_valid)
 );
-*/
 
-assign serial_data_i = iec_data_i;
+
+/*assign serial_data_i = iec_data_i;
 assign serial_clock_i = iec_clock_i;
 assign iec_clock_o = serial_clock_o;
 assign iec_data_o = serial_data_o;
 assign iec_atn_o = serial_atn;
-
+*/
     
 c64_debug c64_debug_i(
               .clk(dot_clk),

@@ -13,7 +13,7 @@ def reset():
     print("Reset")
     global ser
     ser.write([0xde,0xad,0xbe,0xef])
-    sleep(3.5)    
+    sleep(4)    
 
 def write_reg(addr,data):
     global ser
@@ -26,8 +26,12 @@ def write_reg(addr,data):
         b = ser.read(20)
         cnt = 0
         if(b):
-            if(6 != b[0]):
-                print( "%04x : %02x : %c" % (addr,b[0],b[0] ) )
+            if(len(b)!=20):
+                print("Not enough ACKs %i" % offset)
+
+            for z in b:
+                if(6 != z):
+                    print( "%04x : %02x : %c" % (addr,z,z ) )
         else:
             print("No response")
 
@@ -54,10 +58,31 @@ def load_prg(file):
     d = f.read()
     f.close()
     offset = d[1]<< 8 | d[0]
+    #Turn off bad lines while transferring
+    vic_reg11 = read_reg(0xd011) 
+    write_reg(0xd011 , vic_reg11 & ~0x10) 
+
+    print("Programming into offset %x length %i" % (offset,len(d)-2))
     for i in range(len(d)-2):
         write_reg( offset +i ,d[2+i])
         if(i & 0xf == 0):
             print("%04x: write\r" % (offset + i),end=" ")
+
+    sleep(1)
+    ser.read(1000) #Remove pending acks
+
+    # for i in range(len(d)-2):
+        
+    #     for k in range(10):
+    #         v = read_reg( offset +i)
+    #         if(v): break
+
+    #     if(i & 0xf == 0):
+    #         print("%04x: verify\r" % (offset + i),end=" ")
+    #     if( v !=d[2+i] ):
+    #         print("Verification failed a offset %x: %x != %x" % (offset + i,v,d[2+i]))
+
+    write_reg(0xd011 , vic_reg11 ) 
 
 def do_gui():
     import pygame, time

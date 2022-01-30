@@ -76,6 +76,7 @@ reg BOL; // 508 4 Begin line (internal clock)
 reg EOL; // 340 346 End line (internal clock)
 reg VINC; // 404 412 Increment vertical counter
 reg CW; // 12 332 Enable character £etch
+
 reg VMBA; // 496 332 Buss avail for character fetch
 reg REFW; // 484 12 Enable dynamic ram refresh
 reg SPBA; // 336 376 Buss avail for sprite #0 fetch
@@ -125,10 +126,10 @@ reg even;
 
 
 
-localparam C_ADDR_PASE = 0;
-localparam C_DATA_PASE = 2;
-localparam D_ADDR_PASE = 4;
-localparam D_DATA_PASE = 6;
+localparam D_ADDR_PASE = 0;
+localparam D_DATA_PASE = 2;
+localparam C_ADDR_PASE = 4;
+localparam C_DATA_PASE = 6;
 
 integer i;
 integer fd;
@@ -156,9 +157,9 @@ assign ao = vic_ao |
 wire vic_ba = ((RC[2:0] == (Y[2:0])) && vic_enable && EEVMF && VMBA);
 assign ba = vic_ba || (sp_ba !=0);
 
-wire d_access = (vic_ba);
+wire d_access = (CW && vic_ba);
 assign irq_o =  ((ELP && ILP) || (EMMC && IMMC) || (EMCB && IMCB) || (ERST && IRST) );
-assign aec = !( g_access | ba );
+assign aec = !( g_access || d_access || (sp_ba!=0) );
 
 wire[4:0] current_pixel = pixel[X]; 
 wire fg_enable = current_pixel[4]; // Is foreground pixel?
@@ -227,9 +228,9 @@ assign X    = R[8'h16][2:0];
 //Register read write
 always @(posedge dot_clk)
 begin
-    if(Xc[2:0] == 3)
+    if(Xc[2:0] == 0)
         phi0 <=1;
-    else if(Xc[2:0] == 7)
+    else if(Xc[2:0] == 4)
         phi0 <=0;
 
     if(reset) begin
@@ -258,7 +259,7 @@ begin
         g_access_enable <=0;
     end
 
-    if(we && cs && aec && (Xc[2:0] == 4))
+    if(we && cs && aec && (Xc[2:0] == 0))
     begin
         $display("vic write %h %h",ai,di);
         case (ai)
@@ -302,8 +303,8 @@ begin
     else 
         do_reg <= 0;
 
-    if((Xc[2:0] == 4) ) begin
-        if(VINC ) begin
+    if((Xc == 404) ) begin
+        //if(VINC ) begin
             // VERTICAL  DECODES
             even <= !even;
 
@@ -325,12 +326,18 @@ begin
             if(RC == (51-1)) VSW25 <= 1; if(RC == (251-1)) VSW25 <= 0;
             if(RC == (48-1)) EEVMF <= 1; if(RC == (248-1)) EEVMF <= 0;
 
-        end
+        //end
     end
 
     //At the start of a line, just after VINC
-    if(Xc == 0) begin
+    if(Xc == 405) begin
         if((RC == RASTER_WATCH)) IRST <= 1;
+    end
+
+    if( Xc == 0) begin        
+        // In the first phase of cycle 14 of each line, VC is loaded from VCBASE
+        //   (VCBASE->VC) and VMLI is cleared. If there is a Bad Line Condition in
+        //   this phase, RC is also reset to zero.
 
         VMLI <= 0;
 
@@ -339,6 +346,11 @@ begin
         else
             VC <= VCBASE;
 
+        if(vic_ba) begin
+            //Only enably the display of pixels to after the first d_acces
+            g_access_enable <= 1;
+            RCs <= 0;
+        end
     end
     if(RC == (48)) vic_enable <= DEN;        
 
@@ -352,9 +364,6 @@ begin
 
     //d access
     if( d_access ) begin
-        RCs <= 0;
-        g_access_enable <= 1;
-
         if(Xc[2:0] == D_ADDR_PASE) begin
             vic_ao[13:0] <= { VM1[3:0], VC[9:0] };
         end
@@ -366,6 +375,8 @@ begin
     //g access
     if(g_access_enable & CW & (Xc[2:0] == C_ADDR_PASE) ) begin
         g_access <= 1;
+        VMLI <= VMLI + 1;
+        VC <= VC + 1;
 
         //In ECM mode the two MSB of D is uesd for color info
         vic_ao[13:0] <= ECM ? {CB1[3:1], 2'b0,D[VMLI][5:0], RCs[2:0] } :
@@ -376,37 +387,36 @@ begin
     if( g_access_enable & CW & (Xc[2:0] == C_DATA_PASE) ) begin
         g_data <= di[7:0];
         c_data <= D[VMLI];
-        VMLI <= VMLI + 1;
-        VC <= VC + 1;
     end else if(MCM) begin
         //In multicolor more we do a doub3'b000le shift every second cycle
         if(Xc[0] == 0) g_data <= g_data<<2;
     end else
         g_data <= g_data<<1;
 
-    if(Xc[2:0] == 2) begin
+    if(Xc[2:0] == C_DATA_PASE) begin
         g_access <= 0;
     end
 
     if(Xc == 335) vic_ao <=0;
 
     // Horizontal decodes
-    if(Xc == (416-16)) HSYNC <= 1; if(Xc == (452-16)) HSYNC <= 0;
-    if(Xc == (396-16)) HBLANK <= 1;if(Xc == (496-16)) HBLANK <= 0;
-    if(Xc == (456-16)) BURST <= 1; if(Xc == (492-16)) BURST <= 0;
-    if(Xc == 178-16) HEQ1 <= 1;  if(Xc == 196-16) HEQ1 <= 0;
-    if(Xc == 434-16) HEQ2 <= 1;  if(Xc == 452-16) HEQ2 <= 0;
+    if(Xc == (416-12)) HSYNC <= 1; if(Xc == (452-12)) HSYNC <= 0;
+    if(Xc == (396-12)) HBLANK <= 1;if(Xc == (496-12)) HBLANK <= 0;
+    if(Xc == (456-12)) BURST <= 1; if(Xc == (492-12)) BURST <= 0;
+    if(Xc == 178-12) HEQ1 <= 1;  if(Xc == 196-12) HEQ1 <= 0;
+    if(Xc == 434-12) HEQ2 <= 1;  if(Xc == 452-12) HEQ2 <= 0;
 
     //if(Xc == 35) BKDE38 <= 1; if(Xc == 339) BKDE38 <= 0;
     //if(Xc == 28) BKDE40 <= 1; if(Xc == 348) BKDE40 <= 0;
-    if(Xc == 26) BKDE38 <= 1; if(Xc == 330) BKDE38 <= 0;
-    if(Xc == 19) BKDE40 <= 1; if(Xc == 339) BKDE40 <= 0;
+    if(Xc == 30) BKDE38 <= 1; if(Xc == 334) BKDE38 <= 0;
+    if(Xc == 23) BKDE40 <= 1; if(Xc == 343) BKDE40 <= 0;
 
     if(Xc == 500) BOL <= 1;   if(Xc ==   0) BOL <= 0;
     //if(Xc == 508) BOL <= 1;   if(Xc == 4) BOL <= 0;
     if(Xc == 340) EOL <= 1;   if(Xc == 346) EOL <= 0;
     if(Xc == 404) VINC <= 1;  if(Xc == 412) VINC <= 0;
     if(Xc == 12) CW <= 1;     if(Xc == 332) CW <= 0;
+
     if(Xc == 496) VMBA <= 1;  if(Xc == 332) VMBA <= 0;
     if(Xc == 484) REFW <= 1;  if(Xc == 12) REFW <= 0;
     if(Xc == 336) SPBA <= 1;  if(Xc == 376) SPBA <= 0;

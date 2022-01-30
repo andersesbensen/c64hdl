@@ -172,7 +172,7 @@ initial begin
     vic_we <=0;
 
 
-    repeat(160000) @(posedge clk);
+    repeat(220000) @(posedge clk);
     $finish(2);
 end
 
