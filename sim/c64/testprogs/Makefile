@@ -1,6 +1,6 @@
 
 
-all: vic_test.mif iec_test.mif
+all: vic_test.mif iec_test.mif rasterirq_hold.mif
 
 clean:
 	rm -f *.mif *.bin

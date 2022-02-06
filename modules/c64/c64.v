@@ -75,7 +75,9 @@ module c64(
            output IO1,
            output IO2,
 
-           output reg[7:0] debug_status
+           output reg[7:0] debug_status,
+           output reg debug_status_valid
+
        );
 
 wire clk;
@@ -103,7 +105,8 @@ wire vic_cs;
 wire sid_cs;
 wire cia1_cs;
 wire cia2_cs;
-wire cia1_irq;
+wire cia1_irq_n;
+wire cia2_irq_n;
 
 wire [7:0] ram_do;
 wire [7:0] kernal_do;
@@ -121,6 +124,7 @@ wire [7:0] cia2_pbo;
 
 wire [7:0] cia2_pai;
 wire [7:0] cia2_pbi;
+
 
 //assign cia1_pai[7:0] = 8'hff;
 assign cia2_pai[5:0] = 6'h3f;
@@ -368,11 +372,16 @@ assign bus_do = reset ? 0 : ( ram_do | kernal_do | basic_do | charrom_do | vic_d
 always @(posedge clk)
 begin
     //The debug status is used by the VICE test suite
-    if((bus_we) && (bus_address == 16'hD7ff)) 
+    if(bus_we && sid_cs && (bus_address == 16'hD7ff)) 
+    begin
         debug_status <= bus_di;
+        debug_status_valid <=1;
+    end
+    else
+        debug_status_valid <=0;
 
-    if(vic_cs || cia1_cs || cia2_cs)
-        $display("Addr %h do=%h di=%h ram=%h kernal=%b basic=%b char=%b cia1=%b cia2=%b vic=%b we = %b  P=%b aec=%b",
-                 bus_address,bus_do,bus_di,ram_cs,kernal_cs,basic_cs,charrom_cs,cia1_cs,cia2_cs,vic_cs,cpu_we,cpu_p,vic_aec);
+    //if(vic_cs || cia1_cs || cia2_cs)
+    //    $display("Addr %h do=%h di=%h ram=%h kernal=%b basic=%b char=%b cia1=%b cia2=%b vic=%b we = %b  P=%b aec=%b",
+    //             bus_address,bus_do,bus_di,ram_cs,kernal_cs,basic_cs,charrom_cs,cia1_cs,cia2_cs,vic_cs,cpu_we,cpu_p,vic_aec);
 end
 endmodule

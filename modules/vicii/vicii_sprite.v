@@ -32,7 +32,7 @@ reg[5:0] xcnt;   //horizontal counter, ie how many times did we shift
 reg[5:0] ycnt;   //vertical counter
 reg active;
 
-localparam sc = 4 + 336  + number*16 ;
+localparam sc = 4+ 336  + number*16 ;
 
 always @(posedge clk )begin
     if(reset)begin

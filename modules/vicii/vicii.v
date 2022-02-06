@@ -179,50 +179,50 @@ generate for(n=0; n < 8; n=n+1) begin : sprite_regs
     end
 endgenerate
 
-assign MDP = R[8'h1B];
-assign MMC = R[8'h1C];
-assign MXE = R[8'h1D];
-assign MM = R[8'h1E];
-assign MD = R[8'h1F];
+assign MDP = R[6'h1B];
+assign MMC = R[6'h1C];
+assign MXE = R[6'h1D];
+assign MM = R[6'h1E];
+assign MD = R[6'h1F];
 
-assign MM0 = R[8'h25][3:0];
-assign MM1 = R[8'h26][3:0];
-assign MYE = R[8'h17];
-assign ME =  R[8'h15];
+assign MM0 = R[6'h25][3:0];
+assign MM1 = R[6'h26][3:0];
+assign MYE = R[6'h17];
+assign ME =  R[6'h15];
 
 
 //Pointers
-assign VM1 = R[8'h18][7:4];
-assign CB1 = R[8'h18][3:0];
+assign VM1 = R[6'h18][7:4];
+assign CB1 = R[6'h18][3:0];
 
 // Interupt enable
-assign ELP  = R[8'h1A][3];
-assign EMMC = R[8'h1A][2];
-assign EMCB = R[8'h1A][1];
-assign ERST = R[8'h1A][0];
+assign ELP  = R[6'h1A][3];
+assign EMMC = R[6'h1A][2];
+assign EMCB = R[6'h1A][1];
+assign ERST = R[6'h1A][0];
 
 
 //Color registers
-assign EC =  R[8'h20][3:0];
-assign B0 =  R[8'h21][3:0];
-assign B1 =  R[8'h22][3:0];
-assign B2 =  R[8'h23][3:0];
-assign B3 =  R[8'h24][3:0];
+assign EC =  R[6'h20][3:0];
+assign B0 =  R[6'h21][3:0];
+assign B1 =  R[6'h22][3:0];
+assign B2 =  R[6'h23][3:0];
+assign B3 =  R[6'h24][3:0];
 
 // Generic registers
-assign RASTER_WATCH[8] = R[8'h11][7];
-assign ECM  = R[8'h11][6];
-assign BMM  = R[8'h11][5];
-assign DEN = R[8'h11][4];
-assign RSEL = R[8'h11][3];
-assign Y = R[8'h11][2:0];
+assign RASTER_WATCH[8] = R[6'h11][7];
+assign ECM  = R[6'h11][6];
+assign BMM  = R[6'h11][5];
+assign DEN = R[6'h11][4];
+assign RSEL = R[6'h11][3];
+assign Y = R[6'h11][2:0];
 
-assign RASTER_WATCH[7:0] = R[8'h12];
+assign RASTER_WATCH[7:0] = R[6'h12];
 
-assign RES = R[8'h16][5];
-assign MCM  = R[8'h16][4];
-assign CSEL = R[8'h16][3];
-assign X    = R[8'h16][2:0];
+assign RES = R[6'h16][5];
+assign MCM  = R[6'h16][4];
+assign CSEL = R[6'h16][3];
+assign X    = R[6'h16][2:0];
 
 
 //Register read write
@@ -261,7 +261,7 @@ begin
 
     if(we && cs && aec && (Xc[2:0] == 0))
     begin
-        $display("vic write %h %h",ai,di);
+        //$display("vic write %h %h",ai,di);
         case (ai)
             /*
                 When an interrupts occurs, the
@@ -330,7 +330,7 @@ begin
     end
 
     //At the start of a line, just after VINC
-    if(Xc == 405) begin
+    if(Xc == (404+8)) begin
         if((RC == RASTER_WATCH)) IRST <= 1;
     end
 
@@ -352,7 +352,7 @@ begin
             RCs <= 0;
         end
     end
-    if(RC == (48)) vic_enable <= DEN;        
+    if(RC == 48) vic_enable <= DEN;        
 
     //End of line
     //PAL version only has 63 cycles pr line
@@ -375,18 +375,18 @@ begin
     //g access
     if(g_access_enable & CW & (Xc[2:0] == C_ADDR_PASE) ) begin
         g_access <= 1;
-        VMLI <= VMLI + 1;
-        VC <= VC + 1;
-
         //In ECM mode the two MSB of D is uesd for color info
         vic_ao[13:0] <= ECM ? {CB1[3:1], 2'b0,D[VMLI][5:0], RCs[2:0] } :
               BMM ? {CB1[3],             VC[9:0], RCs[2:0] } :
               {CB1[3:1],      D[VMLI][7:0], RCs[2:0] };
     end
 
-    if( g_access_enable & CW & (Xc[2:0] == C_DATA_PASE) ) begin
+    if( g_access & (Xc[2:0] == C_DATA_PASE) ) begin
         g_data <= di[7:0];
         c_data <= D[VMLI];
+        VMLI <= VMLI + 1;
+        VC <= VC + 1;
+
     end else if(MCM) begin
         //In multicolor more we do a doub3'b000le shift every second cycle
         if(Xc[0] == 0) g_data <= g_data<<2;
@@ -496,7 +496,7 @@ end
 generate for(n=0; n < 8; n=n+1) begin : sprites
         vicii_sprite #(.number(n)) sprite(
                          .clk(dot_clk),
-                         .reset(reset || !ME[n]),
+                         .reset(reset || !ME[n]  ),
                          .di(di[7:0]),
                          //.di(8'haa),
                          .VM1(VM1),
@@ -530,7 +530,7 @@ wire[3:0] final_pixel =
     sp_pixel_enable[5] && (!MDP[5] >= fg_enable) ? sp_pixel[5] :
     sp_pixel_enable[6] && (!MDP[6] >= fg_enable) ? sp_pixel[6] :
     sp_pixel_enable[7] && (!MDP[7] >= fg_enable) ? sp_pixel[7] :
-    current_pixel;
+    current_pixel[3:0];
 
 //sync signal
 wire sync = (HSYNC & !VSYNC) | (VEQ & ((HEQ1 | HEQ2)^VSYNC) );
@@ -562,8 +562,15 @@ vicii_palette vicii_palette_i (
                   .chroma_en(chroma_en)
               );
 
+
+//For verialtor
+reg[3:0] pixel_out;
+always @(posedge dot_clk ) begin
+    pixel_out <= pixel_and_border;
+end
+
 // Debug dump to file
-`ifdef XILINX_SIMULATOR
+`ifdef FRAME_DUMP
 integer f;
 reg [10*8:1]  filename;
 reg [23:0]  color_table [15:0];

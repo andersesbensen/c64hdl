@@ -122,6 +122,7 @@ always @(posedge dot_clk) begin
         4'hd: db_out <= {~irq_n, 2'b00, icr};
         4'he: db_out <= {cra[7:5], 1'b0, cra[3:0]};
         4'hf: db_out <= {crb[7:5], 1'b0, crb[3:0]};
+
     endcase else
         db_out <=0;
 end
@@ -419,6 +420,8 @@ always @(posedge clk) begin
                 sdr <= db_in;
                 sp_pending <= 1;
             end
+        default:
+            ;
         endcase
 
 

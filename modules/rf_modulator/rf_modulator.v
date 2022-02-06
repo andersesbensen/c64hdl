@@ -13,8 +13,8 @@ module rf_modulator (
     reg[23:0] audio_acc;
     reg [4:0] rf_video_i;
 initial begin
-    rf_acc  <= 0;
-    audio_acc <= 0;
+    rf_acc  = 0;
+    audio_acc = 0;
 end
     assign rf_video = rf_video_i[4:1];
 

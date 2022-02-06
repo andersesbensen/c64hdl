@@ -29,10 +29,10 @@ wire  _we = reset ? 1 : we;
 wire[DATA_WIDTH-1:0]  _di = reset ? 
     (_a[2] ? (DATA_WIDTH-1) : 0) : di; 
 
-always @(clk,reset) begin
+/*always @(clk,reset) begin
     if(reset) r <= r + 1;
 end
-
+*/
 ram #(ADDR_WIDTH,DATA_WIDTH) ram_e (
     .clk(clk),
     .a(_a),

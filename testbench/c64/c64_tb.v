@@ -54,6 +54,9 @@ wire serial_data_i;
 wire serial_clock_o;
 wire serial_data_o;
 wire serial_atn_o;
+wire[7:0] debug_status;
+wire debug_status_valid;
+wire phi2;
 
 
 c64 c64_e(
@@ -82,24 +85,27 @@ c64 c64_e(
         .phi2(phi2),
 
         .GAME_n(1'b1),
-        //.EXTROM_n(1'b0),
-        .EXTROM_n(1'b1),
+        .EXTROM_n(1'b0),
+        //.EXTROM_n(1'b1),
 
         //IEC Serial port
         .serial_clock_i(serial_clock_i),
         .serial_data_i(serial_data_i),
         .serial_data_o(serial_data_o),
         .serial_clock_o(serial_clock_o),
-        .serial_atn(serial_atn),
+        .serial_atn(serial_atn_o),
 
         .joy_a( 5'b11111),
-        .joy_b( 5'b11111)
+        .joy_b( 5'b11111),
+
+        .debug_status(debug_status),
+        .debug_status_valid(debug_status_valid)
     );
 
 iec iec_e (
     .reset(!reset),
     .clk(phi2),
-    .atn(serial_atn),
+    .atn(serial_atn_o),
     .clock_i(serial_clock_o),
     .clock_o(serial_clock_i),
     .data_o(serial_data_i),
@@ -125,8 +131,8 @@ reg[7:0] cmd[0:9] ;
 integer i;
 
 initial begin
-    $dumpfile("c64.vcd");
-    $dumpvars(0, c64_tb);
+    //$dumpfile("c64.vcd");
+    //$dumpvars(0, c64_tb);
 
     //cmd = "LOAD \"$\",8";
     start_load = 0;
@@ -153,10 +159,17 @@ initial begin
     reset = 1;
 
 
-    forever  #63 clk = ~clk;
+    forever  #63 begin
+        clk = ~clk;
+        if(debug_status_valid) begin
+            //$fatal(debug_status,"fail %x", debug_status);
+            $finish;
+        end;
+    end
+    $display("Done status %x", debug_status);
 
-    $display("Done");
     $finish;
+
 end
 
 endmodule

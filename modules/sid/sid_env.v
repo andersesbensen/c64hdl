@@ -106,6 +106,8 @@ always @(posedge clk ) begin
         8'h0e: exponential_counter_period <=16;
         8'h06: exponential_counter_period <=30;
         8'h00: exponential_counter_period <=1;
+    default: ;
+
     endcase
 end
 endmodule

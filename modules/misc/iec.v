@@ -54,7 +54,7 @@ always @(posedge clk ) begin
     //Rising edge of input clock
     if(!last_clk && clock_i) begin
         //shift RX byte
-        rx_byte = {last_dat, rx_byte[7:1]};
+        rx_byte <= {last_dat, rx_byte[7:1]};
         cnt <= 0;
         if(state == IDLE) begin
             state <= RX;
