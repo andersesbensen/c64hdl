@@ -100,7 +100,7 @@ wire [7:0] P = { N, V, 2'b11, D, I, Z, C };
  */
 
 reg [5:0] state;
-
+reg [7:0] IRSAVE; //Saved instruciton 
 /*
  * control signals
  */
@@ -530,7 +530,7 @@ end
  */
 always @(posedge clk)
     if( write_register & RDY ) begin
-        if(IRHOLD[1] && IRHOLD[0]) // Load A 
+        if((IRSAVE & 8'b11100011)  == 8'b10100011 ) // LAX 
             AXYS[SEL_A] <= (state == JSR0) ? DIMUX : { ADD[7:4] + ADJH, ADD[3:0] + ADJL };
         AXYS[regsel] <= (state == JSR0) ? DIMUX : { ADD[7:4] + ADJH, ADD[3:0] + ADJL };
     end
@@ -880,6 +880,9 @@ always @(posedge clk ) begin
     endcase
 end
 
+always @(posedge clk)
+    if(RDY && state == DECODE)
+        IRSAVE <= IR;
 /*
  * Microcode state machine
  */
@@ -902,17 +905,30 @@ always @(posedge clk)
             8'b1xx0_00x0:	state <= FETCH; // IMM
             8'b1xx0_1100:	state <= ABS0;  // X/Y abs
             8'b1xxx_1000:	state <= REG;   // DEY, TYA, ...
-            8'bxxx0_00x1:	state <= INDX0;
+
+
+            8'bxxx0_0001:	state <= INDX0;
             8'bxxx0_01xx:	state <= ZP0;
-            8'bxxx0_10x1:	state <= FETCH; // IMM
-            8'bxxx0_11x1:	state <= ABS0;  // even E column
+            8'bxxx0_1001:	state <= FETCH; // IMM
+            8'bxxx0_1101:	state <= ABS0;  // even E column
             8'bxxx0_1110:	state <= ABS0;  // even E column
             8'bxxx1_0000:	state <= BRA0;  // odd 0 column
-            8'bxxx1_00x1:	state <= INDY0; // odd 1 column
+            8'bxxx1_0001:	state <= INDY0; // odd 1 column
             8'bxxx1_01xx:	state <= ZPX0;  // odd 4,5,6,7 columns
-            8'bxxx1_10x1:	state <= ABSX0; // odd 9 column
+            8'bxxx1_1001:	state <= ABSX0; // odd 9 column
             8'bxxx1_11xx:	state <= ABSX0; // odd C, D, E, F columns
             8'bxxxx_1010:	state <= REG;   // <shift> A, TXA, ...  NOP
+
+
+            8'bxxx0_0011:	state <= INDX0; // Illegal 0x3
+            8'bxxx1_0011:	state <= INDY0; // Illegal 0x3
+            8'bxxx0_0111:	state <= ZP0; // Illegal  0x7
+            8'bxxx1_0111:	state <= ZPX0; // Illegal 0x7
+            8'bxxx0_1011:	state <= FETCH; // Illegal 0xb
+            8'bxxx1_1011:	state <= ABSX0; // Illegal 0xb
+            8'bxxx0_1111:	state <= ABS0; // Illegal 0xf
+            8'bxxx1_1111:	state <= ABS0; // Illegal 0xf
+
             default: state <= BRK0;
         endcase
 
@@ -1001,15 +1017,16 @@ always @(posedge clk)
         8'b0xx01010,    // ASLA, ROLA, LSRA, RORA
         8'b0xxxxx01,    // ORA, AND, EOR, ADC
         8'b100x10x0,    // DEY, TYA, TXA, TXS
-        8'b1010xxxx,    // LDA/LDX/LDY/LAX
-        
+        8'b1010xxx0,    // LDA/LDX/LDY
+
+        8'b101x_xx11,    // LAX
+
         8'b10111010,    //TSX
         8'b1011x1x0,    // LDX/LDY
         8'b11001010,    // DEX
         8'b1x1xxx01,    // LDA, SBC
         8'bxxx01000:    // DEY, TAY, INY, INX
             load_reg <= 1;
-
         default:	load_reg <= 0;
     endcase
 
@@ -1018,7 +1035,8 @@ always @(posedge clk)
     casex( IR )
         8'b1110_1000,	// INX
         8'b1100_1010,	// DEX
-        8'b101x_xx10:	// LDX, TAX, TSX
+        8'b101x_xx10,	// LDX, TAX, TSX
+        8'b101x_xx11:	// LAX
             dst_reg <= SEL_X;
 
         8'b0x00_1000,	// PHP, PHA
