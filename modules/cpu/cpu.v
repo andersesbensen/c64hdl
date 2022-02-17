@@ -288,6 +288,9 @@ always @( PC )
 `endif
 
 
+wire SAX = ((IRSAVE & 8'b11100011)  == 8'b10000011 );
+wire LAX = ((IRSAVE & 8'b11100011)  == 8'b10100011 );
+
 
 /*
  * Program Counter Increment/Load. First calculate the base value in
@@ -421,9 +424,10 @@ always @(posedge clk)
 /*
  * Data Out MUX 
  */
+
 always @*
 case( state )
-    WRITE:	 DO <= ADD;
+    WRITE:	 DO <=  SAX ? ADD & AXYS[SEL_A] : ADD;
 
     JSR0,
     BRK0:	 DO <= PCH;
@@ -530,8 +534,7 @@ end
  */
 always @(posedge clk)
     if( write_register & RDY ) begin
-        if((IRSAVE & 8'b11100011)  == 8'b10100011 ) // LAX 
-            AXYS[SEL_A] <= (state == JSR0) ? DIMUX : { ADD[7:4] + ADJH, ADD[3:0] + ADJL };
+        if(LAX)  AXYS[SEL_A] <= (state == JSR0) ? DIMUX : { ADD[7:4] + ADJH, ADD[3:0] + ADJL };
         AXYS[regsel] <= (state == JSR0) ? DIMUX : { ADD[7:4] + ADJH, ADD[3:0] + ADJL };
     end
 
@@ -1088,7 +1091,8 @@ always @(posedge clk)
     if( state == DECODE && RDY )
     casex( IR )
         8'b100x_x1x0,	// STX, STY
-        8'b100x_xx01:	// STA
+        8'b100x_xx01,	// STA
+        8'b100x_xx11:	// SAX
             store <= 1;
 
         default:	store <= 0;
