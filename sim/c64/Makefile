@@ -23,8 +23,8 @@ VERILOG_SRC :=  \
 ../../modules/vicii/vicii_palette.v \
 ../../modules/vicii/vicii_sprite.v \
 
-CFLAGS= $(shell pkg-config --cflags libpng)
-LDFLAGS= $(shell pkg-config --libs libpng)
+CFLAGS= -O3 $(shell pkg-config --cflags libpng)
+LDFLAGS= -O3 $(shell pkg-config --libs libpng)
 
 
 

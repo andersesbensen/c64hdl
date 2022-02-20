@@ -7,6 +7,8 @@
 #include <string>
 #include <unistd.h>
 #include <png.h>
+#include <queue>
+
 void frame_dump(int HSYNC, int VSYNC, int pixel)
 {
     static int last_HSYNC;
@@ -45,7 +47,7 @@ void frame_dump(int HSYNC, int VSYNC, int pixel)
             png_write_end(png_ptr, NULL);
             fclose(fp);
         }
-        std::string filename = "frame_"+std::to_string(frame)+ ".png";
+        std::string filename = "frame_" + std::to_string(frame) + ".png";
         std::cout << filename << "\r";
         std::cout.flush();
         fp = fopen(filename.c_str(), "wb");
@@ -83,10 +85,23 @@ int main(int argc, char **argv, char **env)
     int opt;
     int timeout = 0;
 
-    while ((opt = getopt(argc, argv, "t:c:d:")) != -1)
+    std::ifstream prg;
+    std::deque<std::pair<uint16_t, uint8_t>> dma_in;
+
+    int prg_offset;
+    int last_phi;
+    while ((opt = getopt(argc, argv, "t:c:d:p:")) != -1)
     {
         switch (opt)
         {
+        case 'p':
+            prg.open(optarg, std::ios_base::binary);
+            uint8_t offset_hi;
+            uint8_t offset_lo;
+            prg >> offset_lo >> offset_hi;
+            prg_offset = (offset_hi << 8) | offset_lo;
+            std::cout << "Loading prg to address: "<< std::hex << prg_offset << std::endl;
+            break;
         case 'c':
         {
             std::ifstream cart_rom(optarg);
@@ -95,7 +110,9 @@ int main(int argc, char **argv, char **env)
                 std::cout << "Reading cartrige " << optarg << std::endl;
                 cart_rom.read((char *)cart, sizeof(cart));
                 cart_read = true;
-            } else {
+            }
+            else
+            {
                 exit(1);
             }
         }
@@ -175,9 +192,52 @@ int main(int argc, char **argv, char **env)
                        top.c64__DOT__vicii_e__DOT__pixel_out);
         }
 
+        if (last_phi && !top.phi2 && !top.BA)
+        {
+            if (dma_in.size()!=0)
+            {
+                auto c = dma_in.front();
+                top.Ai = c.first;
+                top.Di = c.second;
+                std::cout << top.Ai << "," << (int)top.Di << std::endl;
+                top.DMA = 1;
+                top.RW = 1;
+                dma_in.pop_front();
+            }
+            else
+            {
+                top.RW = 0;
+                top.DMA = 0;
+            }
+        }
+        last_phi = top.phi2;
+
+        if (sim_time == 4000000)
+        {
+            prg.seekg(0, std::ios::end);
+            size_t length = prg.tellg()-2;
+            prg.seekg(2, std::ios::beg);
+
+            char* data = new char[length];
+            prg.read(data,length);
+            for(int i=0; i < length; i++) {
+                dma_in.push_back(std::make_pair(prg_offset++, data[i]));
+            }
+            delete[] data;
+
+            //Type run
+
+            dma_in.push_back(std::make_pair(631, 'R'));
+            dma_in.push_back(std::make_pair(632, 'U'));
+            dma_in.push_back(std::make_pair(633, 'N'));
+            dma_in.push_back(std::make_pair(634, '\r'));
+            dma_in.push_back(std::make_pair(198, 4));
+        }
+ 
         top.eval();
         sim_time++;
-        if((timeout> 0) && (sim_time > (timeout*2)) ) {
+        if ((timeout > 0) && (sim_time > (timeout * 2)))
+        {
             std::cout << "timeout" << std::endl;
             top.debug_status = 1;
             break;
