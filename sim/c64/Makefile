@@ -28,7 +28,7 @@ LDFLAGS= -O3 $(shell pkg-config --libs libpng)
 
 
 
-all: Vc64
+all: c64hdl
 
 verilog_code: $(VERILOG_SRC) main.cpp
 	verilator --cc +1364-2001ext+v --trace \
@@ -38,15 +38,15 @@ verilog_code: $(VERILOG_SRC) main.cpp
 		-Wno-CASEX -Wno-STMTDLY -Wno-COMBDLY \
 		-Wno-PINMISSING \
 		-DXILINX_SIMULATOR=1 \
-		-Wno-WIDTH -exe $(VERILOG_SRC)  \
+		-Wno-WIDTH -exe -o c64hdl $(VERILOG_SRC)  \
 		main.cpp
 
-Vc64: verilog_code
+c64hdl: verilog_code
 	make -C obj_dir -f Vc64.mk
-	cp obj_dir/Vc64 .
+	cp obj_dir/c64hdl .
 
 clean:
-		rm -rf obj_dir Vc64
+		rm -rf obj_dir c64hdl
 
 mrproper: clean
 		rm -rf *.vcd *.vvp

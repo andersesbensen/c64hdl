@@ -9,17 +9,37 @@
 #include <png.h>
 #include <queue>
 
-void frame_dump(int HSYNC, int VSYNC, int pixel)
-{
+
+static uint8_t screen_buffer[312][512];
+vluint64_t sim_time = 0;
+
+void update_screen(int HSYNC, int VSYNC, int pixel) {
+    static int Xc;
+    static int Yc;
     static int last_HSYNC;
     static int last_VSYNC;
-    static int Xc;
-    static uint8_t pixel_row[512];
-    static png_structp png_ptr = 0;
-    static FILE *fp;
-    static int frame;
 
-    memset(pixel_row, sizeof(pixel_row), 0);
+    if (!last_HSYNC && HSYNC)
+    {
+        Xc = 0;
+        Yc++;
+    }
+    if (!last_VSYNC && VSYNC) {
+        Yc =0;
+    }
+
+    screen_buffer[Yc][Xc & 0x1ff] = (HSYNC || VSYNC) ? 0 : pixel & 0xf;
+    last_HSYNC = HSYNC;
+    last_VSYNC = VSYNC;
+    Xc++;
+
+}
+
+void screen_dump(const char* filename)
+{
+    
+    png_structp png_ptr;
+    FILE *fp;
     const png_color palette[16] = {
         {0x00, 0x00, 0x00}, // black
         {0xFF, 0xFF, 0xFF}, // white
@@ -39,49 +59,32 @@ void frame_dump(int HSYNC, int VSYNC, int pixel)
         {0x95, 0x95, 0x95}, // light gray
     };
 
-    if (!last_VSYNC && VSYNC)
-    {
-        frame++;
-        if (png_ptr)
-        {
-            png_write_end(png_ptr, NULL);
-            fclose(fp);
-        }
-        std::string filename = "frame_" + std::to_string(frame) + ".png";
-        std::cout << filename << "\r";
-        std::cout.flush();
-        fp = fopen(filename.c_str(), "wb");
-        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-        png_infop info_ptr;
-        info_ptr = png_create_info_struct(png_ptr);
+    fp = fopen(filename, "wb");
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_infop info_ptr;
+    info_ptr = png_create_info_struct(png_ptr);
 
-        png_init_io(png_ptr, fp);
-        png_set_IHDR(png_ptr, info_ptr, 512, 312,
-                     8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
-                     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-        png_set_PLTE(png_ptr, info_ptr, palette, 16);
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, 512, 312,
+                    8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+                    PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    png_set_PLTE(png_ptr, info_ptr, palette, 16);
+    png_write_info(png_ptr, info_ptr);
 
-        png_write_info(png_ptr, info_ptr);
+    for(int r=0; r < 312; r++) {
+        png_write_row(png_ptr, (png_bytep)screen_buffer[r]);
     }
 
-    if (!last_HSYNC && HSYNC && png_ptr)
-    {
-        Xc = 0;
-        png_write_row(png_ptr, (png_bytep)pixel_row);
-    }
-
-    pixel_row[Xc & 0x1ff] = (HSYNC || VSYNC) ? 0 : pixel & 0xf;
-    last_HSYNC = HSYNC;
-    last_VSYNC = VSYNC;
-    Xc++;
+    png_write_end(png_ptr, NULL);
+    fclose(fp);
 }
 
-vluint64_t sim_time = 0;
 int main(int argc, char **argv, char **env)
 {
     uint8_t cart[1024 * 8];
     bool cart_read = false;
     const char *vcd = nullptr;
+    const char *exit_snapshot = nullptr;
     int opt;
     int timeout = 0;
 
@@ -90,7 +93,7 @@ int main(int argc, char **argv, char **env)
 
     int prg_offset;
     int last_phi;
-    while ((opt = getopt(argc, argv, "t:c:d:p:")) != -1)
+    while ((opt = getopt(argc, argv, "t:c:d:p:s:")) != -1)
     {
         switch (opt)
         {
@@ -117,6 +120,9 @@ int main(int argc, char **argv, char **env)
             }
         }
         break;
+        case 's':
+            exit_snapshot = optarg;
+            break;
         case 'd':
             vcd = optarg;
             break;
@@ -187,11 +193,11 @@ int main(int argc, char **argv, char **env)
 
         if (top.dot_clk)
         {
-            frame_dump(top.c64__DOT__vicii_e__DOT__HSYNC,
+            update_screen(top.c64__DOT__vicii_e__DOT__HSYNC,
                        top.c64__DOT__vicii_e__DOT__VSYNC,
                        top.c64__DOT__vicii_e__DOT__pixel_out);
         }
-
+        
         if (last_phi && !top.phi2 && !top.BA)
         {
             if (dma_in.size()!=0)
@@ -199,7 +205,7 @@ int main(int argc, char **argv, char **env)
                 auto c = dma_in.front();
                 top.Ai = c.first;
                 top.Di = c.second;
-                std::cout << top.Ai << "," << (int)top.Di << std::endl;
+                //std::cout << top.Ai << "," << (int)top.Di << std::endl;
                 top.DMA = 1;
                 top.RW = 1;
                 dma_in.pop_front();
@@ -212,7 +218,7 @@ int main(int argc, char **argv, char **env)
         }
         last_phi = top.phi2;
 
-        if (sim_time == 4000000)
+        if (prg.is_open() && (sim_time == 4000000))
         {
             prg.seekg(0, std::ios::end);
             size_t length = prg.tellg()-2;
@@ -245,6 +251,9 @@ int main(int argc, char **argv, char **env)
     }
     m_trace.close();
 
+    if(exit_snapshot) {
+        screen_dump(exit_snapshot);
+    }
     std::cout << "Exit code " << (int)top.debug_status << std::endl;
 
     exit(top.debug_status);
