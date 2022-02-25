@@ -119,6 +119,41 @@ optional arguments:
   -cmd CMD        Inject a line into the BASIC keyboard buffer followed by RETURN.
 ```
 
+
+# Simulation
+
+Using verialtor it is possible to run a behavioural simulation of the emualtor almost 
+realtime. The simulation project is in the folder sim/c64
+
+```
+./c64hdl  -p ~/prg/ik_plus.prg
+```
+Scripts for testing the code with teh vice emualtor test suite are also provided.
+to run the vice test suite colone the test suite
+
+```
+svn co  https://svn.code.sf.net/p/vice-emu/code/testprogs
+cd testprogs/testbench
+cp ../../vice-tests/* .
+cp ../../assets/*.mif .
+
+```
+edit test testbench.sh and add 
+```
+        c64hdl)
+                target="$1"
+            ;;
+```
+
+Run a test 
+```
+./testbench.sh  c64hdl 
+```
+Or run a subset of the tests 
+```
+./testbench.sh  c64hdl cia
+```
+
 # Known issues
 
 - RF modulation does not use SSB modulation, and occupies ca 12mhz bandwith as opposed to a 6 mhz BW. 

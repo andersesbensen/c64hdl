@@ -1261,9 +1261,13 @@ always @(posedge clk)
     NMI_1 <= NMI;
 
 always @(posedge clk )
+    begin
     if( NMI_edge && state == BRK3 )
         NMI_edge <= 0;
     else if( NMI & ~NMI_1 )
         NMI_edge <= 1;
+
+    if(PC == 0) $display("BREAK! OPCODE %x PC: %x" , IR,PC);        
+    end
 
 endmodule

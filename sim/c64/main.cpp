@@ -9,26 +9,64 @@
 #include <png.h>
 #include <queue>
 
+#include <SDL2/SDL.h>
 
+
+const png_color palette[16] = {
+    {0x00, 0x00, 0x00}, // black
+    {0xFF, 0xFF, 0xFF}, // white
+    {0x68, 0x37, 0x2B}, // red
+    {0x70, 0xA4, 0xB2}, // cyan
+    {0x6F, 0x3D, 0x86}, // purple
+    {0x58, 0x8D, 0x43}, // green
+    {0x35, 0x28, 0x79}, // blue
+    {0xB8, 0xC7, 0x6F}, // yellow
+    {0x6F, 0x4F, 0x25}, // orange
+    {0x43, 0x39, 0x00}, // brown
+    {0x9A, 0x67, 0x59}, // light red
+    {0x44, 0x44, 0x44}, // drak gray
+    {0x6C, 0x6C, 0x6C}, // grey
+    {0x9A, 0xD2, 0x84}, // light green
+    {0x6C, 0x5E, 0xB5}, // light blue
+    {0x95, 0x95, 0x95}, // light gray
+};
+
+
+SDL_Texture * screen_texture;
+SDL_Renderer * renderer;
 static uint8_t screen_buffer[312][512];
+uint32_t screen_buffer2[312][504];
+
 vluint64_t sim_time = 0;
+int audio_cnt =0;
+uint16_t audio_buf[512];
+
 
 void update_screen(int HSYNC, int VSYNC, int pixel) {
     static int Xc;
     static int Yc;
     static int last_HSYNC;
     static int last_VSYNC;
-
+    static uint32_t* sb = (uint32_t*)screen_buffer2;
     if (!last_HSYNC && HSYNC)
     {
         Xc = 0;
         Yc++;
     }
+
     if (!last_VSYNC && VSYNC) {
         Yc =0;
+        sb = (uint32_t*)screen_buffer2;
+        SDL_UpdateTexture(screen_texture, NULL, sb, 504 * sizeof(int32_t));
+        SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
     }
 
-    screen_buffer[Yc][Xc & 0x1ff] = (HSYNC || VSYNC) ? 0 : pixel & 0xf;
+    uint8_t p = (HSYNC || VSYNC) ? 0 : pixel & 0xf;
+    screen_buffer[Yc][Xc & 0x1ff] = p;
+    const png_color* c = &palette[p];
+    *sb++ = (c->red<<24) | (c->green<<16) | (c->blue<<8) | 0xff;
+
     last_HSYNC = HSYNC;
     last_VSYNC = VSYNC;
     Xc++;
@@ -40,24 +78,6 @@ void screen_dump(const char* filename)
     
     png_structp png_ptr;
     FILE *fp;
-    const png_color palette[16] = {
-        {0x00, 0x00, 0x00}, // black
-        {0xFF, 0xFF, 0xFF}, // white
-        {0x68, 0x37, 0x2B}, // red
-        {0x70, 0xA4, 0xB2}, // cyan
-        {0x6F, 0x3D, 0x86}, // purple
-        {0x58, 0x8D, 0x43}, // green
-        {0x35, 0x28, 0x79}, // blue
-        {0xB8, 0xC7, 0x6F}, // yellow
-        {0x6F, 0x4F, 0x25}, // orange
-        {0x43, 0x39, 0x00}, // brown
-        {0x9A, 0x67, 0x59}, // light red
-        {0x44, 0x44, 0x44}, // drak gray
-        {0x6C, 0x6C, 0x6C}, // grey
-        {0x9A, 0xD2, 0x84}, // light green
-        {0x6C, 0x5E, 0xB5}, // light blue
-        {0x95, 0x95, 0x95}, // light gray
-    };
 
     fp = fopen(filename, "wb");
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -78,6 +98,12 @@ void screen_dump(const char* filename)
     png_write_end(png_ptr, NULL);
     fclose(fp);
 }
+
+void mixaudio(void *unused, Uint8 *stream, int len) {
+    memcpy(stream,audio_buf,len);
+    audio_cnt=0;
+}
+
 
 int main(int argc, char **argv, char **env)
 {
@@ -143,6 +169,36 @@ int main(int argc, char **argv, char **env)
     Vc64 top;
     VerilatedVcdC m_trace;
 
+
+
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_AudioSpec fmt;
+    /* Set 16-bit stereo audio at 22Khz */
+    fmt.freq = 11025;
+    fmt.format = AUDIO_S16;
+    fmt.channels = 1;
+    fmt.samples = 512;        /* A good value for games */
+    fmt.callback = mixaudio;
+    fmt.userdata = NULL;
+
+    /* Open the audio device and start playing sound! */
+    SDL_OpenAudio(&fmt, NULL) ;
+
+    SDL_Window * window = SDL_CreateWindow("c64hdl",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        504, 312,
+        0);
+
+    // Create a renderer with V-Sync enabled.
+    renderer = SDL_CreateRenderer(window,
+        -1, SDL_RENDERER_PRESENTVSYNC);
+
+    // Create a streaming texture of size 320 x 240.
+    screen_texture = SDL_CreateTexture(renderer,
+        SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
+        504, 312);
+
     if (vcd)
     {
         Verilated::traceEverOn(true);
@@ -173,6 +229,8 @@ int main(int argc, char **argv, char **env)
         top.eval();
     }
     top.reset = 0;
+
+    SDL_PauseAudio(0);
 
     while (!Verilated::gotFinish())
     {
@@ -232,7 +290,6 @@ int main(int argc, char **argv, char **env)
             delete[] data;
 
             //Type run
-
             dma_in.push_back(std::make_pair(631, 'R'));
             dma_in.push_back(std::make_pair(632, 'U'));
             dma_in.push_back(std::make_pair(633, 'N'));
@@ -248,7 +305,23 @@ int main(int argc, char **argv, char **env)
             top.debug_status = 1;
             break;
         }
+
+        //Chekc if we should quit
+        if((sim_time & 0x3ff) == 0) {
+            SDL_Event event;
+            if (SDL_PollEvent(&event)) {  // poll until all events are handled!
+                if(event.type == SDL_QUIT) {
+                    std::cout << "Stopped" << std::endl;
+                    top.debug_status = 2;
+                    break;
+                }
+            }
+
+            if(audio_cnt < 512) audio_buf[audio_cnt++] = top.audio<<3;
+        }
     }
+    SDL_CloseAudio();
+
     m_trace.close();
 
     if(exit_snapshot) {

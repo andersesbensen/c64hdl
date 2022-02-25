@@ -14,11 +14,11 @@
 # X and Y offsets for saved screenshots. when saving a screenshot in the
 # computers reset/startup screen, the offset gives the top left pixel of the
 # top left character on screen.
-C64HDLSXO=32
-C64HDLSYO=35
+C64HDLSXO=109
+C64HDLSYO=50
 
-C64HDLREFSXO=32
-C64HDLREFSYO=35
+C64HDLREFSXO=17
+C64HDLREFSYO=19
 
 function c64hdl_check_environment
 {
@@ -222,9 +222,9 @@ function c64hdl_run_screenshot
     mkdir -p "$1"/".testbench"
     rm -f "$1"/.testbench/"$screenshottest"-c64hdl.png
     if [ $verbose == "1" ]; then
-        echo $C64HDL $C64HDLOPTS $C64HDLOPTSSCREENSHOT ${@:5} "-t" "$3" "-s" "$1"/.testbench/"$screenshottest"-c64hdl.png "-p" "$4"
+        echo $C64HDL  "-t" "$3" "-s" "$1"/.testbench/"$screenshottest"-c64hdl.png "-p" "$4"
     fi
-    $C64HDL $C64HDLOPTS $C64HDLOPTSSCREENSHOT ${@:5} "-t" "$3" "-s" "$1"/.testbench/"$screenshottest"-c64hdl.png "-p" "$4" 1> /dev/null
+    $C64HDL "-t" "$3" "-s" "$1"/.testbench/"$screenshottest"-c64hdl.png "-p" "$4" 1> /dev/null
     exitcode=$?
     if [ $exitcode -ne 0 ]
     then
@@ -239,14 +239,6 @@ function c64hdl_run_screenshot
     fi
     if [ -f "$refscreenshotname" ]
     then
-
-        # defaults for PAL
-        C64HDLREFSXO=32
-        C64HDLREFSYO=35
-        C64HDLSXO=32
-        C64HDLSYO=35
-        
-        #FIXME: NTSC
     
         if [ $verbose == "1" ]; then
             echo ./cmpscreens "$refscreenshotname" "$C64HDLREFSXO" "$C64HDLREFSYO" "$1"/.testbench/"$screenshottest"-c64hdl.png "$C64HDLSXO" "$C64HDLSYO"
@@ -273,9 +265,9 @@ function c64hdl_run_screenshot
 function c64hdl_run_exitcode
 {
     if [ $verbose == "1" ]; then
-        echo $C64HDL $C64HDLOPTS $C64HDLOPTSEXITCODE ${@:5} "-t" "$3" "-p" "$4"
+        echo $C64HDL  "-t" "$3" "-p" "$4"
     fi
-    $C64HDL $C64HDLOPTS $C64HDLOPTSEXITCODE ${@:5} "-t" "$3" "-p" "$4" 1> /dev/null 2> /dev/null
+    $C64HDL "-t" "$3" "-p" "$4" 1> /dev/null 2> /dev/null
     exitcode=$?
     if [ $verbose == "1" ]; then
         echo $C64HDL "exited with: " $exitcode
