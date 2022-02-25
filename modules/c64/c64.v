@@ -170,7 +170,8 @@ always @(posedge clk ) begin
     end else if(tod_cnt == 10000) begin
         tod_cnt <=0;
         tod <=!tod;
-    end
+    end else
+        tod_cnt <= tod_cnt + 1;
 end
 
 rf_modulator rf_modulator_e(
@@ -214,7 +215,7 @@ mos6510 mos6510_e(
             .NMI(cpu_nmi | NMI),
             .RDY(~BA & ~DMA),
             .PO(cpu_p),
-            .PI( { 3'b111,cass_sense, 4'b1111} ),
+            .PI( { 3'b000,cass_sense, 4'b1111} ),
             .AEC(vic_aec)
         );
 
@@ -294,9 +295,9 @@ mos6526 cia1 (
             .flag_n(cass_rd),
             .pc_n(),
             .tod(tod),
-            .sp_in(),
+            .sp_in(1),
             .sp_out(),
-            .cnt_in(),
+            .cnt_in(1),
             .cnt_out()
         );
 
@@ -317,9 +318,9 @@ mos6526 cia2 (
             .flag_n(),
             .pc_n(),
             .tod(tod),
-            .sp_in(),
+            .sp_in(1),
             .sp_out(),
-            .cnt_in(),
+            .cnt_in(1),
             .cnt_out()
         );
 

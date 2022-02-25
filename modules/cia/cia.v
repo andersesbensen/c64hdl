@@ -106,8 +106,8 @@ wire       wr =  !cs_n & rw;
 always @(posedge dot_clk) begin
     if (rd && clk && ! cs_n)
     case (rs)
-        4'h0: db_out <= pa_in;
-        4'h1: db_out <= pb_in;
+        4'h0: db_out <= (pa_in & ~ddra) | (pa_out & ddra);
+        4'h1: db_out <= (pb_in & ~ddrb) | (pb_out & ddrb);
         4'h2: db_out <= ddra;
         4'h3: db_out <= ddrb;
         4'h4: db_out <= timer_a[ 7:0];

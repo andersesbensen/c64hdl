@@ -242,7 +242,7 @@ int main(int argc, char **argv, char **env)
  
         top.eval();
         sim_time++;
-        if ((timeout > 0) && (sim_time > (timeout * 2)))
+        if ((timeout > 0) && (sim_time > (timeout * 2*8)))
         {
             std::cout << "timeout" << std::endl;
             top.debug_status = 1;

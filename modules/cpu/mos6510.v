@@ -19,32 +19,42 @@ reg [7:0] DI_wrap;
 reg [7:0] DI_wrap2;
 
 
-reg [7:0] PD; //IO direction
+reg [7:0] PD_wrap; //IO direction
 reg [7:0] PO_wrap; //Delay PO output to negative edge
 
 always @(negedge phi2) begin
     if(AEC) DI_wrap2 <= DI;
-    PO <= PO_wrap;    
+    
+    //There a pullups on the outpus, ie when a port is not an output its
+    //high
+    PO <= (PO_wrap & PD_wrap) | ~PD_wrap ;    
+
 end
 
 always @(posedge phi2)
 begin
+
     if(reset) begin
-        //TODO this is no correct the real cpu resets this to 0
-        // but there are pullups on the hiram and lowram lines
-        PO_wrap <= 8'h37;
-        PD <= 8'h37;
+        PO_wrap <= 0;
+        PD_wrap <= 0;
     end
     else if(WE & RDY)
     case ( AB )
-        0: PD <= DO;
-        1: PO_wrap <= DO & PD;
+        0: begin 
+            PD_wrap <= DO;
+            $display("bank dir %x %x eff %x",PO_wrap , DO,(PO_wrap & DO) |  ~DO);
+
+        end
+        1: begin
+            PO_wrap <= DO ;
+            $display("bank %x %x eff %x",DO , PD_wrap,(PO_wrap & DO) | ~PD_wrap);
+        end
     endcase
     else
         if(RDY)
         case ( AB )
-            0: DI_wrap <= PD;
-            1: DI_wrap <= (PO_wrap & PD) | (PI & ~PD);
+            0: DI_wrap <= PD_wrap;
+            1: DI_wrap <= (PO_wrap & PD_wrap) | (PI & ~PD_wrap);
             default:
                 DI_wrap <= DI_wrap2;
         endcase
