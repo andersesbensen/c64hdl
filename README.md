@@ -122,13 +122,13 @@ optional arguments:
 
 # Simulation
 
-Using verialtor it is possible to run a behavioural simulation of the emualtor almost 
-realtime. The simulation project is in the folder sim/c64
+Using `verialtor` it is possible to run a behavioural simulation of the emualtor almost 
+realtime. The simulator has sound support but it sounds very bad. The simulation project is in the folder sim/c64
 
 ```
 ./c64hdl  -p ~/prg/ik_plus.prg
 ```
-Scripts for testing the code with teh vice emualtor test suite are also provided.
+Scripts for testing the code with the vice emualtor test suite are also provided.
 to run the vice test suite colone the test suite
 
 ```
@@ -153,6 +153,12 @@ Or run a subset of the tests
 ```
 ./testbench.sh  c64hdl cia
 ```
+# Showcase
+
+![International Karate](images/ik_plus.jpeg)
+
+![Bitmap mode](images/bitmap_mode.jpeg)
+![Boulder dash simulator](images/boulder_dash_sim.png)
 
 # Known issues
 
