@@ -1,23 +1,6 @@
-//`timescale 1ns / 1ns
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date: 04/20/2018 06:41:30 AM
-// Design Name:
-// Module Name: c64_artix_tb
-// Project Name:
-// Target Devices:
-// Tool Versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
+// Copyright 2022 Anders Lynge Esbensen. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 
 module c64_tb(

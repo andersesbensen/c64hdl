@@ -1,3 +1,8 @@
+// Copyright 2022 Anders Lynge Esbensen. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+
 module rf_modulator (
     input clk_142mhz, // Color carrier * 32 ie 141.8758
     input [5:0] luma,

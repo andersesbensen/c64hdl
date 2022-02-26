@@ -1,3 +1,7 @@
+// Copyright 2022 Anders Lynge Esbensen. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 
 module mos6510(phi2, clk, reset, AB, DI, DO, WE, IRQ, NMI, RDY,PO,PI,AEC );
 input phi2;		// CPU clock
