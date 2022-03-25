@@ -164,4 +164,13 @@ Or run a subset of the tests
 
 - RF modulation does not use SSB modulation, and occupies ca 12mhz bandwith as opposed to a 6 mhz BW. 
 - Sprites can have artifacts when they reach the right side of the border.
+- Several of the undocumented MOS6510 opcodes does not work
 - A lot of games crashes, there are propably lots of reasons for this.
+
+
+# License
+This project contains code from:
+- Arlet Ottens, for the CPU implementation
+- Rayne, for the MOS6526 CIA imeplentation
+
+This code is distributed under [3 clause BSD license](./LICENSE).

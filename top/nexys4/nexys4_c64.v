@@ -298,24 +298,19 @@ c64_debug c64_debug_i(
 
 always @(negedge phi2 ) begin
     DoL <= Do;
-    debug_do_l <= debug_do;
+    //debug_do_l <= debug_do;
 end
 
 always @(posedge phi2 ) begin
     if(reset)
         debug_dma <=0;
-    else if(!BA)
+    else if(!BA) begin
         debug_dma <= debug_request;
-    
-    if(debug_dma) begin
-        debug_ack <= !BA;
-    end    
-    else
-        debug_ack <= 0;
-
+        debug_ack <= debug_dma;        
+    end
 end
 
-assign Di = DMA ? debug_do_l : cart_data;
+assign Di = DMA ? debug_do : cart_data;
 wire[4:0] joyA =  sw_i[15] ?  5'b11111 : { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i };
 wire[4:0] joyB = !sw_i[15] ?  5'b11111 : { !btnc_i , !btnr_i, !btnl_i,!btnd_i, !btnu_i };
 

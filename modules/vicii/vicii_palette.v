@@ -1,3 +1,8 @@
+// Copyright 2022 Anders Lynge Esbensen. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+
 module vicii_palette (
            input[3:0] pixel,
            output reg [4:0] luma,

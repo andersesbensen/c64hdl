@@ -102,8 +102,11 @@ void screen_dump(const char* filename)
 void mixaudio(void *unused, Uint8 *stream, int len) {
     memcpy(stream,audio_buf,len);
     audio_cnt=0;
-}
+    SDL_Event e;
+    e.type = SDL_USEREVENT;
+    SDL_PushEvent( &e );
 
+}
 
 int main(int argc, char **argv, char **env)
 {
@@ -317,7 +320,13 @@ int main(int argc, char **argv, char **env)
                 }
             }
 
-            if(audio_cnt < 512) audio_buf[audio_cnt++] = top.audio<<3;
+            if(audio_cnt < 512) {
+                audio_buf[audio_cnt++] = top.audio<<3;
+            } else {
+                /*while( SDL_WaitEvent( &event )) {
+                    if(event.type == SDL_USEREVENT) break;
+                }*/
+            }
         }
     }
     SDL_CloseAudio();

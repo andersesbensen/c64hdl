@@ -354,6 +354,8 @@ wire[7:0] romh_do = (ROMH & !DMA) ? Di : 8'h00;
 wire[7:0] roml_do = (ROML & !DMA) ? Di : 8'h00;
 wire[7:0] vic_do_mask = vic_aec ? vic_do : 8'b0;
 assign bus_do = reset ? 0 : ( ram_do | kernal_do | basic_do | charrom_do | vic_do_mask | cia1_do| cia2_do | sid_do  | colorram_do_cpu | romh_do | roml_do ) ;
+
+reg[15:0] zzz;
 always @(posedge clk)
 begin
     //The debug status is used by the VICE test suite
@@ -365,6 +367,8 @@ begin
     else
         debug_status_valid <=0;
 
+    //zzz <= bus_address | 16'bxxxxxxxxxxxxxxxx;
+    //$display("xxxx %x", zzz);
     //if(vic_cs || cia1_cs || cia2_cs)
     //    $display("Addr %h do=%h di=%h ram=%h kernal=%b basic=%b char=%b cia1=%b cia2=%b vic=%b we = %b  P=%b aec=%b",
     //             bus_address,bus_do,bus_di,ram_cs,kernal_cs,basic_cs,charrom_cs,cia1_cs,cia2_cs,vic_cs,cpu_we,cpu_p,vic_aec);
