@@ -297,6 +297,16 @@ begin
         8'h16: do_reg <=  {2'b11, RES,MCM,CSEL,X};
         8'h19: do_reg <=  { irq_o ,3'b111,ILP, IMMC,IMCB,IRST};
         8'h1A: do_reg <=  {4'b1111,ELP, EMMC,EMCB,ERST};
+        8'h1e:  //Sprite collision is clear when read
+        begin
+            do_reg <= R[ai];
+            R[ai] <= 0;
+        end
+        8'h1f:
+        begin
+            do_reg <= R[ai];
+            R[ai] <= 0;
+        end            
         default:
             if(ai >= 8'h20)
                 do_reg <= {4'b1111,R[ai][3:0]};
@@ -479,7 +489,7 @@ begin
     // and are cleared automatically by the read access.
     if((sp_pixel_enable & (sp_pixel_enable - 1) != 0)) begin
         IMMC <= 1;
-        R[8'h1e] <= sp_pixel_enable;
+        R[8'h1e] <= sp_pixel_enable & (sp_pixel_enable - 1) | R[8'h1e];
     end
 
 
@@ -492,7 +502,7 @@ begin
     // the register is read by the processor.
     if(fg_enable && (0!=sp_pixel_enable)) begin
         IMCB<= 1;
-        R[8'h1f] <= sp_pixel_enable;
+        R[8'h1f] <= sp_pixel_enable | R[8'h1f];
     end
 end
 

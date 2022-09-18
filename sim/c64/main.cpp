@@ -12,6 +12,9 @@
 #include <SDL2/SDL.h>
 
 
+int by_scancode(int scancode);
+int by_sdl_scancode(int scancode);
+
 const png_color palette[16] = {
     {0x00, 0x00, 0x00}, // black
     {0xFF, 0xFF, 0xFF}, // white
@@ -40,6 +43,7 @@ uint32_t screen_buffer2[312][504];
 vluint64_t sim_time = 0;
 int audio_cnt =0;
 uint16_t audio_buf[512];
+uint8_t key_matrix[8];
 
 
 void update_screen(int HSYNC, int VSYNC, int pixel) {
@@ -106,6 +110,29 @@ void mixaudio(void *unused, Uint8 *stream, int len) {
     e.type = SDL_USEREVENT;
     SDL_PushEvent( &e );
 
+}
+
+void
+c64_key_press(int key, int state)
+{
+  if(key < 64) {
+    if(state) {
+      key_matrix[key /8] |= (1<<(key & 7));
+    } else {
+      key_matrix[key / 8] &= ~(1<<(key & 7));
+    }
+  }
+}
+
+void
+c64_joy_press(uint8_t& joystick, int key, int state) {
+
+  if(key<0 || key>4) return;
+  if(state) {
+    joystick |= 1<<key;
+  } else {
+    joystick &= ~(1<<key);
+  }
 }
 
 int main(int argc, char **argv, char **env)
@@ -247,10 +274,10 @@ int main(int argc, char **argv, char **env)
         {
             top.Di = cart[top.Ao & 0x1fff];
         }
-        if (top.debug_status_valid)
+        /*if (top.debug_status_valid)
         {
             break;
-        }
+        }*/
 
         if (top.dot_clk)
         {
@@ -309,6 +336,14 @@ int main(int argc, char **argv, char **env)
             break;
         }
 
+        int key = 0xff;
+        for(int i=0; i < 8; i++) {
+            if( (top.keyboard_ROW & (1<<i)) == 0) {
+            key &= ~key_matrix[i];
+            }
+        }
+        top.keyboard_COL = key;
+
         //Chekc if we should quit
         if((sim_time & 0x3ff) == 0) {
             SDL_Event event;
@@ -317,15 +352,29 @@ int main(int argc, char **argv, char **env)
                     std::cout << "Stopped" << std::endl;
                     top.debug_status = 2;
                     break;
-                }
+                } else if((event.type == SDL_KEYDOWN) || (event.type == SDL_KEYUP) ) {
+                    bool state = event.type == SDL_KEYDOWN;
+
+                    switch (event.key.keysym.scancode)
+                    {
+                    case SDL_SCANCODE_KP_8: c64_joy_press(top.joy_b,0,state); break;
+                    case SDL_SCANCODE_KP_6: c64_joy_press(top.joy_b,1,state); break;
+                    case SDL_SCANCODE_KP_4: c64_joy_press(top.joy_b,2,state); break;
+                    case SDL_SCANCODE_KP_2: c64_joy_press(top.joy_b,3,state); break;
+                    case SDL_SCANCODE_KP_ENTER: c64_joy_press(top.joy_b,3,state);
+                    default:
+                        c64_key_press( by_sdl_scancode(event.key.keysym.scancode),state );
+                        break;
+                    }
+                } 
             }
 
             if(audio_cnt < 512) {
                 audio_buf[audio_cnt++] = top.audio<<3;
             } else {
-                /*while( SDL_WaitEvent( &event )) {
+                while( SDL_WaitEvent( &event )) {
                     if(event.type == SDL_USEREVENT) break;
-                }*/
+                }
             }
         }
     }

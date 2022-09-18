@@ -894,7 +894,11 @@ always @(posedge clk)
             8'bxxx1_1001:	state <= ABSX0; // odd 9 column
             8'bxxx1_11xx:	state <= ABSX0; // odd C, D, E, F columns
             8'bxxxx_1010:	state <= REG;   // <shift> A, TXA, ...  NOP
-            default: state <= BRK0;
+            default: 
+            begin
+                $display("Unknown opcode %x ", IR);
+                state <= BRK0;
+            end
         endcase
 
         ZP0	: state <= write_back ? READ : FETCH;
@@ -962,7 +966,8 @@ always @(posedge clk)
         BRK1	: state <= BRK2;
         BRK2	: state <= BRK3;
         BRK3	: state <= JMP0;
-
+        default:
+            $display("Unexpected state");
     endcase
 
 /*

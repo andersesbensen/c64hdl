@@ -30,7 +30,7 @@ LDFLAGS= -O3 $(shell pkg-config --libs libpng) $(shell pkg-config --libs sdl2)
 
 all: c64hdl
 
-verilog_code: $(VERILOG_SRC) main.cpp
+verilog_code: $(VERILOG_SRC) keyboard.cpp main.cpp 
 	verilator --cc +1364-2001ext+v --trace \
 		-LDFLAGS "$(LDFLAGS)" \
 		-CFLAGS "-g $(CFLAGS)" \
@@ -39,7 +39,7 @@ verilog_code: $(VERILOG_SRC) main.cpp
 		-Wno-PINMISSING \
 		-DXILINX_SIMULATOR=1 \
 		-Wno-WIDTH -exe -o c64hdl $(VERILOG_SRC)  \
-		main.cpp
+		keyboard.cpp main.cpp
 
 c64hdl: verilog_code
 	make -C obj_dir -f Vc64.mk

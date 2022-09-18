@@ -27,16 +27,15 @@ reg [7:0] PD_wrap; //IO direction
 reg [7:0] PO_wrap; //Delay PO output to negative edge
 
 always @(negedge phi2) begin
-    if(AEC) begin 
-        DI_wrap2 <= DI;    
-        //There a pullups on the outpus, ie when a port is not an output its
-        //high
-        PO <= (PO_wrap & PD_wrap) | ~PD_wrap ;    
-    end
+    if(AEC) DI_wrap2 <= DI;    
+    //There a pullups on the outpus, ie when a port is not an output its
+    //high
+    
 end
 
 always @(posedge phi2)
 begin
+    PO <= (PO_wrap & PD_wrap) | (PI & ~PD_wrap);    
 
     if(reset) begin
         PO_wrap <= 0;
